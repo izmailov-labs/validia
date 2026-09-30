@@ -1,0 +1,177 @@
+# This repository is a uv workspace. The root is *virtual*: it has no [project]
+# table, is never built and never published. Every distributable package lives
+# under libs/ with its own pyproject.toml, its own version and its own release
+# tag. What lives here is the shared development environment and the one lint,
+# type, test and coverage gate that every package is held to.
+
+[tool.uv.workspace]
+members = ["libs/*"]
+
+# PEP 735 dependency groups. These are dev-only and are NOT published to PyPI
+# (unlike [project.optional-dependencies], which consumers would see as extras).
+# They sit on the workspace root so there is a single toolchain for every member.
+[dependency-groups]
+dev = [
+  # Not a runtime dependency: httpx is franca's optional `[http]` extra. It lives here
+  # so mypy strict sees its inline types without a blanket ignore_missing_imports.
+  "httpx>=0.28",
+  "mypy>=2.3.1",
+  "pre-commit>=4.6.2",
+  "pytest>=9.1.1",
+  "pytest-asyncio>=1.4",
+  "pytest-cov>=7.1",
+  # Not runtime dependencies: PyYAML is whence's optional `[yaml]` extra. Both
+  # live here so mypy strict sees the optional import path without a blanket
+  # ignore_missing_imports.
+  "pyyaml>=6.0.2",
+  "types-PyYAML>=6.0.12",
+  # Ruff has no 1.0 and does not follow semver below it: a minor bump can change
+  # which rules fire. Pinned exactly so lint results only change deliberately.
+  "ruff==0.16.6",
+]
+docs = [
+  "mkdocs-material>=9.7.7",
+  "mkdocstrings[python]>=1.0.6",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+required-version = ">=0.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# Every member's source root, so isort classifies first-party imports correctly.
+src = ["libs/franca/src", "libs/validia/src", "libs/whence/src"]
+
+[tool.ruff.lint]
+# Explicit select, never the defaults: ruff 0.16 grew its default set from 59 to
+# 413 rules, so relying on defaults means upgrades silently redefine the gate.
+select = [
+  "E", "F", "W",      # pycodestyle + pyflakes
+  "I",                # isort
+  "B",                # bugbear
+  "UP",               # pyupgrade
+  "SIM",              # simplify
+  "C4",               # comprehensions
+  "N",                # pep8-naming
+  "PERF",             # performance
+  "RUF",              # ruff-specific
+  "A",                # builtins
+  "RET",              # return
+  "PT",               # pytest style
+  "TID",              # tidy-imports
+  "PIE",              # misc
+  "ASYNC",            # flake8-async — blocking calls in async def, bad sleeps
+  "D",                # pydocstyle — docstrings are the docs site's source material
+  "S",                # bandit
+  "TC",               # type-checking imports
+  "PTH",              # pathlib over os.path
+  "T20",              # no stray print()
+]
+ignore = [
+  "E501",             # line length is the formatter's job, not the linter's
+  "TID252",           # relative imports are fine inside the package
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# Globs are matched against the path from this file, so every pattern has to be
+# member-relative rather than anchored at a single src/ or tests/ directory.
+"**/tests/**" = [
+  "S101",             # assert is the point of a test
+  # Docstrings are the docs site's source material, but tests are not published:
+  # module, class, __init__ and dunder docstrings are noise on a test helper.
+  "D100", "D101", "D103", "D105", "D107",
+  "TID251",           # tests may drive asyncio directly; src/ must inject Clock
+  # A test owns its event loop, so blocking file I/O while arranging a
+  # fixture is not the latency bug these rules exist to catch.
+  "ASYNC230", "ASYNC240",
+]
+# The ONLY module in src/ allowed to import asyncio. Everything else injects Clock,
+# which is what keeps franca loop-neutral: a trio user passes TrioClock.
+"**/franca/core/clock.py" = ["TID251"]
+# The CLI is the one place that legitimately writes to stdout/stderr.
+"**/whence/cli.py" = ["T20"]
+# The runnable examples under libs/whence/examples: printing is the point, and
+# they are not published -- the sdist ships src/ and tests/ only. An example is
+# an application, and an application drives its own event loop, so the asyncio
+# ban that keeps src/ loop-neutral does not apply to one either.
+"**/whence/examples/*" = ["T20", "TID251"]
+# Config files are trusted input the operator wrote, and Expat >=2.4.1 bounds
+# entity amplification by default (verified: a billion-laughs document raises
+# ParseError). defusedxml's last release is 2021-03-08 and stops at py3.9.
+"**/whence/formats/xml.py" = ["S314"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"asyncio".msg = "inject Clock (franca.core.clock) instead; asyncio is allowed only in core/clock.py"
+
+[tool.ruff.lint.flake8-type-checking]
+# pydantic evaluates field annotations at class creation; without this, TC001-TC003
+# move field-type imports behind TYPE_CHECKING and the models fail to build.
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.12"
+# One invocation covers the whole workspace. Test module basenames must stay
+# unique across members: mypy maps tests/test_x.py to the module `test_x`, and
+# two members with the same basename collide even though pytest tolerates it.
+files = [
+  "libs/franca/src",
+  "libs/franca/tests",
+  "libs/validia/src",
+  "libs/validia/tests",
+  "libs/whence/src",
+  "libs/whence/tests",
+  "libs/whence/examples",
+]
+strict = true
+warn_unreachable = true
+enable_error_code = [
+  "redundant-expr",
+  "possibly-undefined",
+  "truthy-bool",
+  "ignore-without-code",
+]
+# Deliberately NOT ignore_missing_imports: with near-zero runtime dependencies,
+# a missing stub is real signal rather than noise.
+
+[tool.pytest]
+minversion = "9.1"
+# Arrays, not whitespace-separated strings — this is the native pytest 9 table,
+# not the legacy string-typed [tool.pytest.ini_options].
+addopts = [
+  "-ra", "--strict-markers", "--strict-config", "--import-mode=importlib",
+  # Live provider calls are opt-in: `make test-contract` (or -m contract) runs them.
+  "-m", "not contract and not container",
+]
+markers = [
+  "contract: live provider call; needs keys",
+  "container: needs a real container mount; run with `make test-docker`",
+]
+# One collection root for the workspace; each member keeps its own tests/ dir.
+testpaths = ["libs"]
+# importlib import mode leaves sys.path alone, so the suite exercises the
+# installed package rather than the source tree next to it.
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.run]
+source = ["libs/franca/src", "libs/validia/src", "libs/whence/src"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 90
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+  "@overload",
+]

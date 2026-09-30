@@ -1,0 +1,25 @@
+# The base file: committed defaults that every higher layer may override.
+mode = "fast"
+
+[db]
+host = "localhost"
+port = 5432
+pool_size = 5
+debug = "no"                      # bound to a real bool
+# Interpolated *after* the merge, so it picks up whichever layer won db.host.
+url = "postgres://${db.host}:${db.port}/app"
+# POSIX-style default, so the colon inside the default is unambiguous.
+cache = "${db.cache_url:-redis://localhost:6379}"
+
+[http]
+timeout = "30s"                   # bound to a timedelta
+retries = 3
+hosts = ["a.example", "b.example"]
+# An environment variable, read without the DEMO_ prefix, with a fallback.
+region = "${env:AWS_REGION:-eu-west-1}"
+# Optional: this key disappears entirely when nothing supplies it.
+proxy = "${?http.proxy_url}"
+
+[tls]
+# Resolved against *this file's* directory, never the process's cwd.
+cert = "./ca.crt"
