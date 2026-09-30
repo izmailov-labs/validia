@@ -1,0 +1,1 @@
+--8<-- "libs/validia/CHANGELOG.md"

@@ -1,0 +1,72 @@
+site_name: validia
+site_description: "A universal, async-first evaluation framework for LLM systems: prompts, tools, and agents."
+site_url: https://validia.dev
+repo_url: https://github.com/izmailov-labs/validia
+repo_name: izmailov-labs/validia
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2026 izmailov-labs
+
+# docs/research/ holds internal working notes, not published documentation.
+exclude_docs: |
+  research/
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+# The API reference is generated from docstrings in src/, so `mkdocs serve`
+# must watch it too - otherwise edits there don't trigger a rebuild.
+watch:
+  - libs/franca/src
+  - libs/validia/src
+  - libs/whence/src
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_source: true
+            show_signature_annotations: true
+            separate_signature: true
+            members_order: source
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - API reference: api.md
+  - whence: whence.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: ["."]
+  - toc:
+      permalink: true

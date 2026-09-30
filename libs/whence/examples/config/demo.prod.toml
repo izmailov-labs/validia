@@ -1,0 +1,4 @@
+# A profile overlay carries only what differs. Active when DEMO_PROFILES=prod.
+[db]
+host = "db.internal"
+pool_size = 20
