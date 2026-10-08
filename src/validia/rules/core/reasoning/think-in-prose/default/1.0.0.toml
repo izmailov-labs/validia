@@ -1,0 +1,8 @@
+# reasoning/think-in-prose, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Controls thinking in prose"
+pattern = "think step by step|take a deep breath|think (harder|less)|don'?t overthink|do not think"
+fix = "Control thinking with the model's settings (effort), not with prose."

@@ -1,0 +1,9 @@
+# context/restated-default, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Restates what the model already does"
+pattern = '\bbe (accurate|helpful|clear|concise)\b'
+judge = "sentence"
+fix = "Cut the restated default, or say what it looks like here."

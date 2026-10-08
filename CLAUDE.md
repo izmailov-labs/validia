@@ -1,14 +1,21 @@
-# validia.dev — working notes
+# validia — working notes
 
-A **uv workspace** (>= 0.12). The repository root is virtual: it has no `[project]`
-table and is never published. Every distributable package lives under `libs/<name>/`
-with its own `pyproject.toml`, version, changelog and release tag.
+A universal, async-first evaluation framework for LLM systems. Full spectrum — prompt
+evaluation, tool selection, agent evaluation, agent-type comparison — under one set of
+primitives.
 
-| Package | Path | What it is |
+A **single-package repository** (uv >= 0.12): the repository root *is* the package. It started
+as the virtual root of a uv workspace that also held `franca` (the model communication layer)
+and `whence` (the configuration layer). Both were extracted into repositories of their own in
+September 2026 and are consumed from PyPI like any other dependency:
+
+| Package | Repository | Role here |
 | --- | --- | --- |
-| `franca` | `libs/franca` | The model communication layer: transports, connectors, one IR per capability, an adapter per wire dialect, middleware and a registry. Standalone-useful; `validia` will depend on it. |
-| `whence` | `libs/whence` | Typed configuration that remembers where it came from: layered loading from env, `.env`, TOML, JSON, YAML, `.properties` and XML, with full provenance. Zero runtime dependencies. |
-| `validia` | `libs/validia` | A universal, async-first evaluation framework for LLM systems. Full spectrum — prompt evaluation, tool selection, agent evaluation, agent-type comparison — under one set of primitives. |
+| `franca` | <https://github.com/izmailov-labs/franca> | Runtime dependency. Transports, connectors, one IR per capability, an adapter per wire dialect, middleware and the model registry. Brings pydantic. |
+| `whence` | <https://github.com/izmailov-labs/whence> | Runtime dependency. Typed configuration with full provenance. Zero dependencies of its own. |
+
+Their design history is still here under `docs/research/` (gitignored working notes): the
+communication-layer plan and the settings-layer plan describe what became franca and whence.
 
 ## Commands
 
@@ -16,138 +23,108 @@ with its own `pyproject.toml`, version, changelog and release tag.
 make install     # uv sync --group dev --group docs + pre-commit install
 make lint        # ruff check + ruff format --check
 make fmt         # ruff check --fix + ruff format
-make typecheck   # mypy (strict)
+make typecheck   # mypy (strict, src and tests)
 make test        # pytest
 make cov         # pytest --cov (fail_under=90)
 make encoding    # fail on any read missing an explicit encoding=
-make test-docker # the Linux scenarios CI cannot reproduce (see below)
 make docs        # mkdocs build --strict
-make build       # uv build --all-packages + twine check
-make build-one PKG=validia   # build a single member
+make build       # uv build + twine check
 make all         # everything CI runs
 ```
 
-Every command runs from the repository root and covers all members at once; there is
-one virtual environment and one lockfile for the workspace.
-
-Run one test: `uv run pytest libs/validia/tests/test_smoke.py::test_version_is_exposed`
-Work on one member: `uv run --package validia <cmd>`
-One container scenario: `make test-docker-one S=musl`
-
-## Cross-platform testing
-
-Three layers, because no single one is enough and each covers what the others
-cannot.
-
-| Layer | Covers | Cannot cover |
-| --- | --- | --- |
-| **Seams** (`_platform.flavour`, `WindowsEnviron` in whence's tests) | Windows and macOS *semantics* from any runner: path flavour, environment case-folding, config-directory conventions | Real filesystem behaviour |
-| **CI matrix** (`.github/workflows/ci.yml`) | The three real operating systems, at both ends of the Python range | Container mounts, musl, non-UTF-8 locales |
-| **Docker** (`make test-docker`) | musl, a POSIX locale, a read-only root, an unprivileged user, a real `/run/secrets` tmpfs, a live Kubernetes ConfigMap symlink swap | macOS and Windows -- neither runs in a Linux container |
-
-Tests needing a real mount carry the `container` marker and are excluded from the
-default run; `make test-docker` supplies `WHENCE_CONTAINER=1` and the mounts.
-
-Two rules that keep the matrix honest. **Probe, never branch on `sys.platform`**
-— case-insensitivity is a property of a directory, not a platform, and a name
-that can be created is not always a name that round-trips. And **every read
-passes `encoding=` explicitly**: `make encoding` turns a missing one into an
-error, because otherwise it only fails on a Windows code page, only for
-non-ASCII content, and only in someone else's CI.
+Run one test: `uv run pytest tests/test_smoke.py::test_version_is_exposed`
 
 ## Conventions
 
-- **Layout is `libs/<package>/src/`.** Never add an importable package at the repo
-  root or at a member's root — the point of `src/` is that tests import the
-  *installed* package (`--import-mode=importlib`), not the working tree.
-- **Tooling configuration lives once, in the root `pyproject.toml`.** Ruff, mypy,
-  pytest and coverage are configured there for the whole workspace; a member's
-  `pyproject.toml` carries packaging metadata and nothing else. Adding a
-  `[tool.ruff]` or `[tool.mypy]` table to a member forks the gate — don't.
-  A new member needs its `src/` path added to `[tool.ruff] src`, `[tool.mypy] files`
-  and `[tool.coverage.run] source`; `testpaths = ["libs"]` picks its tests up
-  automatically.
-- **Test module basenames stay unique across members.** mypy maps
-  `libs/x/tests/test_foo.py` to the module `test_foo`, so two members with the same
-  test filename collide under strict mode even though pytest tolerates it.
-- **Cross-member dependencies go through `[tool.uv.sources]`** with
-  `{ workspace = true }`, so development resolves to the local path while consumers
-  installing from PyPI get the published release. That table is dev metadata and
-  does not reach the built wheel.
-- **mypy is `strict = true` and covers `tests/` too.** New code lands annotated;
-  do not add `disallow_untyped_defs = false` or blanket `ignore_missing_imports`.
-  Suppressions must be specific: `# type: ignore[code]`, never bare.
-- **Async is the default shape.** `pytest-asyncio` runs in auto mode, so
-  `async def test_*` needs no decorator. Ruff's `ASYNC` rules are on — they catch
-  blocking calls inside `async def`, which is the failure mode that is hardest to
-  spot by reading.
-- **Runtime dependencies are inherited by every consumer.** `dependencies` in
-  `pyproject.toml` is empty on purpose; adding one is a real decision. Dev tooling
-  goes in `[dependency-groups]`, which is not published. The one exception:
-  **pydantic (`>=2.12,<3`) is franca's single runtime dependency** — the stdlib route
-  is `Any`-heavy code owned forever, and dataclasses validate nothing on the outbound
-  request, so a bad request would carry no field path (see §11 of the communication
-  layer plan). `validia` stays at zero, and adding any other is still a real decision.
-  httpx is an optional extra (`franca[http]`), imported lazily inside
-  `HttpxTransport.__init__` so `pip install franca` works without it.
-- **Async is asyncio-declared but loop-neutral by construction.** Only four operations
-  touch the loop — sleep, monotonic/wall time, HTTP I/O, async-generator close — and
-  each goes through an injected `Clock` or `Transport`, or an explicit `aclose()`. So
-  no `anyio`: a trio user passes their own `TrioClock` plus `HttpxTransport`. This is
-  enforced, not merely intended — ruff `TID251` bans `import asyncio` everywhere in
-  `src/` except `franca/core/clock.py`. Deadlines are `clock.monotonic()` arithmetic;
-  a total deadline and cancellation belong to the caller (`asyncio.timeout` /
-  `trio.move_on_after`), so core has no `asyncio.timeout`, task groups or locks.
-- **Ruff is pinned exactly** (`ruff==0.16.6`). It has no 1.0 and does not follow
-  semver below it, so a floating version would silently change the lint gate. The
-  `select` list is explicit for the same reason — ruff 0.16 grew its *default* set
-  from 59 to 413 rules.
-- **Docstrings are load-bearing**: the docs site generates the API reference from
-  them via mkdocstrings, and ruff's `D` rules (google convention) enforce them in
-  `src/`.
-- **Configuration goes through `whence`, never `os.environ` directly.** A member
-  that needs settings declares a schema and calls `whence`; that is what keeps a
-  bad value reporting the file and line it came from. `whence` itself has no
-  runtime dependencies and, unlike franca, no async at all: configuration is
-  read once before the app runs, so `Config.load` is an ordinary synchronous
-  call and ruff's `TID251` ban on `import asyncio` has no exemption in whence.
-- **Public API** is whatever `src/validia/__init__.py` lists in `__all__`.
-  Everything else is internal and may change without a major bump.
+- **Layout is `src/`.** Tests import the *installed* package (`--import-mode=importlib`), not
+  the working tree. Never add an importable package at the repo root.
+- **One subpackage per context**, each with its data beside its code: `suites/` (the suite
+  model, graders, suite files, example suites in `examples/`, the front-end-agnostic suite
+  API), `prompts/` (the guided builder and `default.toml`), `rules/` (the lint engine split
+  into `model`, `matching`, `reading`, `catalog`, `layering`, plus `local` for project rule
+  files, and the core rule tree in `core/`), `runs/` (model access and the runner) and `cli/`
+  (`app` assembling one module per command family on `common`, plus `interview`, `settings`
+  and `_loop`). `suites/` and `prompts/` keep their `__init__` free of imports, because
+  `suites.api` and `prompts.building` import each other's packages; `rules/` re-exports its
+  public API.
+- **Tooling configuration lives once, in `pyproject.toml`.** Ruff, mypy, pytest and coverage are
+  configured there alongside the packaging metadata; there is no second config file.
+- **mypy is `strict = true` and covers `tests/` too.** New code lands annotated; do not add
+  `disallow_untyped_defs = false` or blanket `ignore_missing_imports`. Suppressions must be
+  specific: `# type: ignore[code]`, never bare. franca and whence both ship `py.typed`.
+- **Async is the default shape.** `pytest-asyncio` runs in auto mode, so `async def test_*` needs
+  no decorator. Ruff's `ASYNC` rules are on — they catch blocking calls inside `async def`,
+  which is the failure mode that is hardest to spot by reading.
+- **Runtime dependencies are inherited by every consumer.** Adding one is a real decision. There
+  are exactly two, and both are the sibling packages above:
+  - **franca (`>=0.1.1,<1`)** — the call path stays in franca rather than a layer over a vendor
+    SDK, because the eval runner needs usage meters, served model, attempts and failure class
+    per trial off one object. pydantic (`>=2.12,<3`) arrives transitively; do not re-declare it
+    until validia defines models of its own.
+  - **whence (`>=1.0,<2`)** — layered settings with provenance, so a bad value reports the file
+    and line it came from.
 
-## Diagrams
+  httpx is **not** a dependency of validia. It sits behind `franca[http]`, and the transport is
+  injected, so offline paths (scripted transports, cassettes) never need it. `validia run`'s
+  default transport is the one thing that needs real HTTP, and it is the `validia[http]` extra.
+- **Async is asyncio-declared but loop-neutral by construction.** Sleep and time go through an
+  injected `Clock` (`franca.core.clock`), HTTP through an injected `Transport`, so no `anyio`:
+  a trio user passes their own `TrioClock`. Enforced, not intended — ruff `TID251` bans
+  `import asyncio` everywhere in `src/` (tests are exempt) except `src/validia/cli/_loop.py`, the one
+  place the command line, an application, drives its event loop. The runner itself
+  (`validia.runs.runner`) stays loop-neutral: scheduling trials belongs to the caller, as do a total
+  deadline and cancellation (`asyncio.timeout` / `trio.move_on_after`).
+- **Configuration goes through `whence`, never `os.environ` directly.** Declare a schema and make
+  one call into whence; that is what keeps a bad value reporting the file and line it came from.
+- **Every read passes `encoding=` explicitly**, and platform behaviour is **probed, never
+  branched on `sys.platform`**. `make encoding` turns a missing `encoding=` into an error,
+  because otherwise it only fails on a Windows code page, only for non-ASCII content, and only
+  in someone else's CI.
+- **Ruff is pinned exactly** (`ruff==0.16.6`). It has no 1.0 and does not follow semver below it,
+  so a floating version would silently change the lint gate. The `select` list is explicit for
+  the same reason — ruff 0.16 grew its *default* set from 59 to 413 rules.
+- **Docstrings are load-bearing**: the docs site generates the API reference from them via
+  mkdocstrings, and ruff's `D` rules (google convention) enforce them in `src/`.
+- **Public API** is whatever `src/validia/__init__.py` lists in `__all__`. Everything else is
+  internal and may change without a major bump.
 
-`diagrams/franca-core.*` is the whole communication layer in one picture; `diagrams/panels/`
-holds higher-detail per-area sources. The `.mmd` files are the source of truth, never the
-PNG: edit those and re-render with the `/diagram` skill.
+## Working against an unreleased franca or whence
 
-Three label rules, all learned by breaking them. Labels must stay **ASCII**, because the renderer
-ships source into the page through `atob()`. Labels must contain **no bare `<` or `>`**, including
-`->` and `<=`, because mermaid HTML-escapes them and you get `&gt;` in the output. And labels must
-contain **no `<br/>`**: it works in SVG and PNG, but the excalidraw converter emits it as literal
-`<br>` text and then word-wraps mid-word, so line breaks silently corrupt the editable scene. Use
-single-line labels and let the renderer wrap.
+Both resolve from PyPI, and CI only ever installs from PyPI. A change validia needs in a sibling
+lands in that sibling's repository and is released there first; the floor in `dependencies`
+then moves up with a changelog entry. To develop against a local checkout in the meantime:
 
-Contrary to the `/diagram` skill's own documentation, the bundled converter **does** turn a
-`classDiagram` into an editable `.excalidraw`; this was verified against the bundle, not assumed.
+```bash
+uv add --editable ../franca      # or ../whence; writes [tool.uv.sources] into pyproject.toml
+# ... work ...
+git checkout pyproject.toml uv.lock
+```
+
+Never commit a `[tool.uv.sources]` path entry: the published wheel would still install the PyPI
+release, so the tree and the artifact would disagree.
 
 ## Release
 
-Each member releases on its own cadence, so **tags are package-scoped**:
-`<package>-vX.Y.Z`, e.g. `validia-v0.1.0`.
+One package, so tags are plain: `vX.Y.Z`.
 
-Version is static in the member's `pyproject.toml`; `__version__` reads it back at
-runtime via `importlib.metadata`. To release: bump the version in
-`libs/<pkg>/pyproject.toml`, write the `libs/<pkg>/CHANGELOG.md` entry, tag
-`<pkg>-vX.Y.Z`, push the tag. `release.yml` parses the package name out of the tag,
-verifies the version against that member's `pyproject.toml`, builds **only** that
-member, and publishes via PyPI Trusted Publishing (OIDC — there is no API token in
-this repo).
+Version is static in `pyproject.toml`; `__version__` reads it back at runtime via
+`importlib.metadata`. To release: bump the version, write the `CHANGELOG.md` entry, tag `vX.Y.Z`,
+push the tag. `release.yml` verifies the tag against `pyproject.toml`, builds, and publishes via
+PyPI Trusted Publishing (OIDC — there is no API token in this repo).
 
-Three constraints worth remembering: each package needs **its own PyPI project and
-its own trusted publisher**, configured before its first tag; **PyPI rejects new
-files added to a release older than 14 days**, so everything for a version ships in
-one run; and a sibling package is never published as a side effect of someone else's
-release.
+Two constraints worth remembering: the **trusted publisher must be configured on PyPI before the
+first tag** (owner `izmailov-labs`, repository `validia`, workflow `release.yml`, environment
+`pypi`), and **PyPI rejects new files added to a release older than 14 days**, so everything for
+a version ships in one run.
+
+## Docs site
+
+<https://validia.dev> is GitHub Pages serving the `gh-pages` branch. `docs.yml` runs
+`mkdocs gh-deploy --force` on every push to `main`, which rewrites that branch from scratch, so
+the custom domain lives in `docs/CNAME` (copied into each build) — delete it and the next deploy
+drops the domain. DNS is at GoDaddy: apex A/AAAA records to GitHub Pages, `www` CNAME to
+`izmailov-labs.github.io`. `.dev` is HSTS-preloaded, so the site is unreachable over plain HTTP
+until Pages has issued its certificate.
 
 ## Open decisions
 

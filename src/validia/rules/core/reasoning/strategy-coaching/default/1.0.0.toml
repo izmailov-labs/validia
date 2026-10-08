@@ -1,0 +1,9 @@
+# reasoning/strategy-coaching, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Coaches a strategy"
+pattern = "it's usually best to|a good approach is"
+judge = "method"
+fix = "Drop the strategy coaching; say what a good result is."

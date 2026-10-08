@@ -1,0 +1,8 @@
+# output/length-cap, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "A hard length cap in the prompt"
+pattern = 'every \d+ (tool calls|messages|turns)|at most \d+ (words|sentences|bullets)|under \d+ words'
+fix = "Describe the reader and the length they need; enforce real limits in the harness."

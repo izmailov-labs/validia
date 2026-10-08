@@ -1,0 +1,9 @@
+# Cases for security/unwrapped-input 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = ["Here is the customer's message: {message}", "Summarise this page: {{page}}"]
+quiet = [
+  "<message>{message}</message>",
+  '''<ticket>
+{ticket}
+</ticket>''',
+]

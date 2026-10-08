@@ -24,5 +24,13 @@ jobs:
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
+      # ghp-import authors the gh-pages commit from git config, which a fresh
+      # runner does not have.
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - run: uv sync --locked --no-default-groups --group docs
-      - run: uv run mkdocs gh-deploy --force
+      # --force rewrites gh-pages on every run, so the custom domain lives in
+      # docs/CNAME (copied into each build), not in the Pages settings alone.
+      - run: uv run mkdocs gh-deploy --force --strict

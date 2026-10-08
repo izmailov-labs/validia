@@ -1,0 +1,58 @@
+[
+  {
+    "name": "lookup_order",
+    "description": "Look up one order: its status, items and delivery date. Do not use it for questions about how the shop works; use search_help.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "order_id": {
+          "type": "string",
+          "description": "The order number, digits only."
+        }
+      },
+      "required": [
+        "order_id"
+      ]
+    }
+  },
+  {
+    "name": "search_help",
+    "description": "Search the help centre for articles about how the shop works. Do not use it for a specific order; use lookup_order.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "What to search for."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "create_ticket",
+    "description": "Open a ticket for a person on the support team to handle. Do not use it for a question a help article answers; use search_help first.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "The problem, in one sentence."
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "high",
+            "normal"
+          ]
+        }
+      },
+      "required": [
+        "summary",
+        "priority"
+      ]
+    }
+  }
+]

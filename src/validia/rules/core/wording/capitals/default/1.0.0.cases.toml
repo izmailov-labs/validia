@@ -1,0 +1,4 @@
+# Cases for wording/capitals 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = ["You MUST cite a source.", "IMPORTANT: check the order first."]
+quiet = ["You must cite a source, because readers check it.", "This is important for billing."]

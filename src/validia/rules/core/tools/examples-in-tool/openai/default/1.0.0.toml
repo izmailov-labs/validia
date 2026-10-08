@@ -1,0 +1,9 @@
+# tools/examples-in-tool on every openai model, laid over the default.
+
+released = "2026-10-07"
+changes = [
+  "First release: examples in a description get OpenAI's advice, which differs from Claude's.",
+]
+
+extend = true
+fix = "Remove the examples: on OpenAI reasoning models they may hurt tool selection."

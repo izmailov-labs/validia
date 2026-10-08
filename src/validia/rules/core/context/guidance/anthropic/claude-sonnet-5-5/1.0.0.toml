@@ -1,0 +1,17 @@
+# How to write context for anthropic/claude-sonnet-5-5 models: what the layers
+# beside it encode as rules, said as instructions.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+summary = "Sonnet 5.5 holds its role against a pasted persona, and is less accurate when it skips thinking on totals and rules."
+instructions = [
+  "Spend the role line on audience, product and quality bar; the role itself holds.",
+  "Move point systems and totals into code or a tool, or leave thinking on where the prompt asks for arithmetic.",
+]
+sources = [
+  "Anthropic, Prompting best practices",
+  "Anthropic, Prompting Claude Sonnet 5.5",
+  "Anthropic, Skills best practices",
+  "Anthropic skills repository, prompt-audit guide",
+]

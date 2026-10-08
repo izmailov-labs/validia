@@ -1,0 +1,9 @@
+# context/unchecked-quotes, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Asks for quotes without checking them"
+pattern = "quote (the )?relevant|first,? quote|<quotes>"
+severity = "info"
+fix = "Check every quoted span is word for word in its source, or use the Citations API."

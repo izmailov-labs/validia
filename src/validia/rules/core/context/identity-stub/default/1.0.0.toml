@@ -1,0 +1,9 @@
+# context/identity-stub, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "An identity stub for a role"
+pattern = '^\s*You are (a|an) (helpful|expert)\b'
+judge = "context"
+fix = "Replace the identity stub with the audience, the product and the quality bar."

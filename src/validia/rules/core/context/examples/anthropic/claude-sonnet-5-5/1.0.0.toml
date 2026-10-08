@@ -1,0 +1,10 @@
+# Whole prompts for context, as anthropic/claude-sonnet-5-5 sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "points on Sonnet 5.5"
+fires = { "arithmetic-in-prompt" = "warn" }
+text = "Award 2 points for a late delivery and 3 for a damaged item; refund when the total passes 4."

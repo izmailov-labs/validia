@@ -1,0 +1,16 @@
+# How to write reasoning for anthropic models: what the layers
+# beside it encode as rules, said as instructions.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+summary = "Thinking is a setting on current Claude models: effort and the thinking mode, not prose."
+instructions = [
+  "Set effort in the request instead of writing 'think step by step' or 'don't overthink'.",
+  "Do not ask Fable 5 or 5.1, Opus 5 or 5.5, or Sonnet 5.5 to show their reasoning: their safeguards refuse it. Ask for a short justification after the answer instead.",
+]
+sources = [
+  "Claude API docs: Extended thinking, Effort, Refusals",
+  "Anthropic, Prompting best practices",
+  "Anthropic skills repository, prompt-audit guide",
+]

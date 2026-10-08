@@ -1,0 +1,15 @@
+# How to write reasoning for anthropic/claude-opus-5 models: what the layers
+# beside it encode as rules, said as instructions.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+summary = "Self-verification lines are documented for Opus 5; elsewhere they are information until measured."
+instructions = [
+  "Leave out 'double-check your answer' and 'before you finish, verify' unless an experiment on your route shows the line pays for its tokens.",
+]
+sources = [
+  "Anthropic, Prompting Claude Opus 5",
+  "Anthropic, Prompting best practices",
+  "Anthropic skills repository, model-migration guide",
+]

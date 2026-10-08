@@ -37,9 +37,7 @@ theme:
 # The API reference is generated from docstrings in src/, so `mkdocs serve`
 # must watch it too - otherwise edits there don't trigger a rebuild.
 watch:
-  - libs/franca/src
-  - libs/validia/src
-  - libs/whence/src
+  - src
 
 plugins:
   - search
@@ -58,7 +56,6 @@ nav:
   - Home: index.md
   - Getting started: getting-started.md
   - API reference: api.md
-  - whence: whence.md
   - Changelog: changelog.md
 
 markdown_extensions:

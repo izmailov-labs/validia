@@ -1,0 +1,22 @@
+# Whole prompts for wording, as every model sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "wording, before"
+fires = ["prohibition-list", "exclamation-marks", "capitals", "rule-without-reason", "hedged-requirement", "completion-booster"]
+counts = { "capitals" = 3 }
+text = '''IMPORTANT: You MUST ALWAYS be polite!!
+Never mention competitors. Never use slang. Never start a reply with "Certainly".
+Try to include a summary if possible.
+Be thorough. Do not stop early.'''
+
+[[examples]]
+name = "wording, after"
+fires = []
+text = '''Customers read these replies on their phones between other tasks, so write in plain,
+friendly language. Don't name or compare competitors: legal reviews every comparison we
+publish, and support replies are not reviewed. End with a short summary of what was
+resolved and what happens next.'''

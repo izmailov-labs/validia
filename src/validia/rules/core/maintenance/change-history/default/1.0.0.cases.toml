@@ -1,0 +1,8 @@
+# Cases for maintenance/change-history 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = [
+  "The search tool now works differently.",
+  "We no longer offer phone support.",
+  "Refunds now work differently.",
+]
+quiet = ["Refunds go back to the original card."]

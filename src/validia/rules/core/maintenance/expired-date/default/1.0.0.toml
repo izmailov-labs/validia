@@ -1,0 +1,8 @@
+# maintenance/expired-date, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "A date-limited instruction"
+pattern = '(before|after|as of|since) \d{4}-\d{2}'
+fix = "Remove the date condition once its date has passed."

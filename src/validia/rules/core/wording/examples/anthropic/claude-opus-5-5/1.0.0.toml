@@ -1,0 +1,15 @@
+# Whole prompts for wording, as anthropic/claude-opus-5-5 sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "Opus 5.5 before"
+fires = { "prohibition-list" = "info", "capitals" = "warn", "rule-without-reason" = "warn" }
+text = "Avoid jargon. Avoid emoji. Never use slang, ALWAYS."
+
+[[examples]]
+name = "Opus 5.5 after"
+fires = {}
+text = "Write plainly, without jargon or emoji, because customers read these replies on their phones."

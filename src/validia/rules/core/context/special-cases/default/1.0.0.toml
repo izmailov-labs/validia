@@ -1,0 +1,10 @@
+# context/special-cases, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "A list of special cases"
+pattern = '^\s*if (the )?(user|customer)\b'
+at_least = 2
+judge = "conditional"
+fix = "Find the principle the special cases share, state it once with its scope, and test it."

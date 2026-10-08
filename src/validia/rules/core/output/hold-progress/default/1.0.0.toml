@@ -1,0 +1,9 @@
+# output/hold-progress, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Holds back progress updates"
+pattern = "hold (all )?(findings|results)|don'?t narrate|no interim"
+severity = "info"
+fix = "Remove it, and ask for progress updates in the request settings where you want them."

@@ -1,0 +1,4 @@
+# Cases for maintenance/grading-talk 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = ["You will be graded on accuracy.", "Hidden tests check your answer."]
+quiet = ["Answer the customer's question."]

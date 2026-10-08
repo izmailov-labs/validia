@@ -1,0 +1,9 @@
+# tools/sales-pitch, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Sells the tool instead of describing it"
+pattern = 'the (best|most effective)\b|should be called whenever'
+scope = ["tool_description"]
+fix = "Describe what the tool does and returns, not why it is good."

@@ -1,0 +1,10 @@
+# tools/missing-when-not, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Does not say when not to use the tool"
+pattern = 'when not to|do not use (this|it) (when|for)|not this tool|use \w+ instead'
+scope = ["tool_description"]
+missing = true
+fix = "Say when not to use the tool, and what to use instead."

@@ -1,0 +1,16 @@
+# wording/default-when-unsure on every anthropic model, laid over the default.
+
+released = "2026-10-07"
+changes = [
+  "First release: capitals, '!!' and 'default to' are warnings on the models documented to overtrigger on them.",
+]
+
+extend = true
+severity = "warn"
+models = [
+  "claude-opus-4-5",
+  "claude-opus-4-6",
+  "claude-sonnet-4-6",
+  "claude-opus-5",
+  "claude-opus-5-5",
+]

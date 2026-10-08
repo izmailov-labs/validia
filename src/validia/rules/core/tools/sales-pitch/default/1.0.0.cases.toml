@@ -1,0 +1,7 @@
+# Cases for tools/sales-pitch 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = [
+  "The best way to answer any question.",
+  "This should be called whenever a user writes.",
+]
+quiet = ["Look up one order by its number."]

@@ -11,7 +11,7 @@ validia aims to cover the full evaluation spectrum under one set of primitives:
 
 !!! note "Early scaffolding"
     `validia` is at `0.1.0` and the public API is not yet defined. This site is
-    generated from the docstrings in `libs/validia/src/validia/`, so it fills in as the library does.
+    generated from the docstrings in `src/validia/`, so it fills in as the library does.
 
 ## Install
 

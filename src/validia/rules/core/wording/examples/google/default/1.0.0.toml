@@ -1,0 +1,11 @@
+# Whole prompts for wording, as google/default sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "capitals on Gemini 3"
+model = "gemini-3-pro"
+fires = { "capitals" = "warn" }
+text = "Answer in German. This is CRITICAL, because the shop serves Germany."

@@ -1,0 +1,9 @@
+# reasoning/show-reasoning, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Asks to see the model's reasoning"
+pattern = "show your (thinking|reasoning)|<scratchpad>|<thinking>"
+severity = "warn"
+fix = "Remove it: these models refuse requests to expose their reasoning; ask for a short justification instead."

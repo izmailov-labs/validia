@@ -1,0 +1,8 @@
+# Cases for context/arithmetic-in-prompt 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = [
+  "Award 5 points for each correct field.",
+  "Give it a score of 7.",
+  "Refund points: late delivery = 2.",
+]
+quiet = ["Mark each field right or wrong."]

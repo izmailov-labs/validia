@@ -1,0 +1,4 @@
+# Cases for context/repeated-instruction 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = ["Remember, cite the notes.", "As stated above, cite the notes."]
+quiet = ["Cite the notes once per answer."]

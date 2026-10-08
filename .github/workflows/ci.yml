@@ -45,9 +45,7 @@ jobs:
       matrix:
         # Full version sweep on Linux, and both ends of the range on macOS and
         # Windows. The floor catches what has always been broken there; the
-        # ceiling catches what a new release breaks. One point is not enough for
-        # a workspace whose configuration layer reads the filesystem and the
-        # environment, where the three platforms genuinely disagree.
+        # ceiling catches what a new release breaks.
         include:
           - { os: ubuntu-latest, python: "3.12" }
           - { os: ubuntu-latest, python: "3.13" }
@@ -117,12 +115,8 @@ jobs:
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
-      # Every workspace member is built, so a packaging break in any of them
-      # fails here rather than at its release tag.
-      - run: uv build --all-packages --out-dir dist
+      - run: uv build --out-dir dist
       - run: uvx twine check dist/*
-      # Both checks iterate the wheels rather than naming a package, so a new
-      # workspace member is covered the moment it exists.
       - name: PEP 561 marker is present in every wheel
         run: |
           for whl in dist/*.whl; do

@@ -1,0 +1,8 @@
+# tools/discourages-tools, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Discourages tool use across the board"
+pattern = "only use tools when|minimi[sz]e tool calls"
+fix = "Say which tool fits which request; blanket discouragement makes models skip tools they need."

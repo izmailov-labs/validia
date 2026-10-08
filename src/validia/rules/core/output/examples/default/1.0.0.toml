@@ -1,0 +1,20 @@
+# Whole prompts for output, as every model sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "output, before"
+fires = ["format-ban", "json-in-prose", "length-cap", "hold-progress"]
+counts = { "length-cap" = 2 }
+text = '''Output ONLY valid JSON. Never use bullet points. Keep the reply under 50 words.
+Post a progress note every 3 tool calls. Hold all findings for the final response.'''
+
+[[examples]]
+name = "output, after"
+fires = []
+text = '''Replies are read on a phone, so answer only what was asked. Use a numbered list when the
+customer has to follow steps in order; otherwise write short paragraphs. When you start
+a lookup that takes a while, tell the customer what you are checking.
+Reply as JSON with the fields reasoning, then outcome, then next_step.'''

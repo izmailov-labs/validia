@@ -1,0 +1,9 @@
+# output/format-ban, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Bans formatting"
+pattern = 'never use (bullet( point)?s|headers|bold)|no (bullets|headers)\b'
+severity = "info"
+fix = "Describe the format you want instead of banning structure; Fable 5.1 already under-formats."

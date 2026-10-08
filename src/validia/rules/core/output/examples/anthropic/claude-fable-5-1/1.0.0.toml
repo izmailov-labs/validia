@@ -1,0 +1,15 @@
+# Whole prompts for output, as anthropic/claude-fable-5-1 sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "Fable 5.1 before"
+fires = { "format-ban" = "warn", "hold-progress" = "warn" }
+text = "Never use bullets. Hold all findings for the final response."
+
+[[examples]]
+name = "Fable 5.1 after"
+fires = {}
+text = "Use a numbered list when the customer has to follow steps in order; otherwise write short paragraphs."

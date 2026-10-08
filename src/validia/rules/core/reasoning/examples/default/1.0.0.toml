@@ -1,0 +1,19 @@
+# Whole prompts for reasoning, as every model sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "reasoning, before"
+fires = ["numbered-script", "think-in-prose", "self-verify"]
+counts = { "numbered-script" = 4 }
+text = '''Think step by step. STEP 1: Read the ticket. STEP 2: Classify it. STEP 3: Look up the
+order. STEP 4: Draft a reply. Before you finish, double-check your answer.'''
+
+[[examples]]
+name = "reasoning, after"
+fires = []
+text = '''Resolve the ticket in one reply where the policy allows. Done means the customer knows
+the outcome and any next step, and every fact about their order comes from the order
+record.'''

@@ -1,30 +1,68 @@
-# This repository is a uv workspace. The root is *virtual*: it has no [project]
-# table, is never built and never published. Every distributable package lives
-# under libs/ with its own pyproject.toml, its own version and its own release
-# tag. What lives here is the shared development environment and the one lint,
-# type, test and coverage gate that every package is held to.
+[project]
+name = "validia"
+version = "0.1.0"
+description = "A universal, async-first evaluation framework for LLM systems: prompts, tools, and agents."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "izmailov-labs" }]
+keywords = ["llm", "evaluation", "evals", "prompts", "agents", "benchmarking", "async"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Testing",
+  "Typing :: Typed",
+]
+# Runtime dependencies are inherited by every consumer of this library. There are
+# exactly two, both sibling packages consumed from PyPI. pydantic arrives through
+# franca; do not re-declare it until validia defines models of its own.
+dependencies = [
+  "franca>=0.1.1,<1",
+  "whence>=1.0,<2",
+]
 
-[tool.uv.workspace]
-members = ["libs/*"]
+[project.optional-dependencies]
+# Real HTTP for `validia run`. Behind an extra so the offline paths -- lint, check,
+# scripted transports -- never pull an HTTP client into a consumer's environment.
+http = ["franca[http]>=0.1.1,<1"]
+
+[project.scripts]
+validia = "validia.cli:main"
+
+[project.urls]
+Homepage = "https://validia.dev"
+Documentation = "https://validia.dev"
+Repository = "https://github.com/izmailov-labs/validia"
+Changelog = "https://github.com/izmailov-labs/validia/blob/main/CHANGELOG.md"
+Issues = "https://github.com/izmailov-labs/validia/issues"
+
+[build-system]
+requires = ["hatchling>=1.32"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/validia"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/", "tests/", "CHANGELOG.md", "README.md", "LICENSE"]
 
 # PEP 735 dependency groups. These are dev-only and are NOT published to PyPI
 # (unlike [project.optional-dependencies], which consumers would see as extras).
-# They sit on the workspace root so there is a single toolchain for every member.
 [dependency-groups]
 dev = [
-  # Not a runtime dependency: httpx is franca's optional `[http]` extra. It lives here
-  # so mypy strict sees its inline types without a blanket ignore_missing_imports.
-  "httpx>=0.28",
   "mypy>=2.3.1",
   "pre-commit>=4.6.2",
   "pytest>=9.1.1",
   "pytest-asyncio>=1.4",
   "pytest-cov>=7.1",
-  # Not runtime dependencies: PyYAML is whence's optional `[yaml]` extra. Both
-  # live here so mypy strict sees the optional import path without a blanket
-  # ignore_missing_imports.
-  "pyyaml>=6.0.2",
-  "types-PyYAML>=6.0.12",
   # Ruff has no 1.0 and does not follow semver below it: a minor bump can change
   # which rules fire. Pinned exactly so lint results only change deliberately.
   "ruff==0.16.6",
@@ -41,8 +79,7 @@ required-version = ">=0.12"
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-# Every member's source root, so isort classifies first-party imports correctly.
-src = ["libs/franca/src", "libs/validia/src", "libs/whence/src"]
+src = ["src"]
 
 [tool.ruff.lint]
 # Explicit select, never the defaults: ruff 0.16 grew its default set from 59 to
@@ -78,9 +115,7 @@ ignore = [
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-# Globs are matched against the path from this file, so every pattern has to be
-# member-relative rather than anchored at a single src/ or tests/ directory.
-"**/tests/**" = [
+"tests/**" = [
   "S101",             # assert is the point of a test
   # Docstrings are the docs site's source material, but tests are not published:
   # module, class, __init__ and dunder docstrings are noise on a test helper.
@@ -90,23 +125,14 @@ convention = "google"
   # fixture is not the latency bug these rules exist to catch.
   "ASYNC230", "ASYNC240",
 ]
-# The ONLY module in src/ allowed to import asyncio. Everything else injects Clock,
-# which is what keeps franca loop-neutral: a trio user passes TrioClock.
-"**/franca/core/clock.py" = ["TID251"]
-# The CLI is the one place that legitimately writes to stdout/stderr.
-"**/whence/cli.py" = ["T20"]
-# The runnable examples under libs/whence/examples: printing is the point, and
-# they are not published -- the sdist ships src/ and tests/ only. An example is
-# an application, and an application drives its own event loop, so the asyncio
-# ban that keeps src/ loop-neutral does not apply to one either.
-"**/whence/examples/*" = ["T20", "TID251"]
-# Config files are trusted input the operator wrote, and Expat >=2.4.1 bounds
-# entity amplification by default (verified: a billion-laughs document raises
-# ParseError). defusedxml's last release is 2021-03-08 and stops at py3.9.
-"**/whence/formats/xml.py" = ["S314"]
+# The CLI and its terminal questions are the only places that write to stdout/stderr.
+"src/validia/cli/*.py" = ["T20"]
+# The command line is an application and owns its event loop; this module is the one
+# place it is driven. Everything else in src/ stays loop-neutral.
+"src/validia/cli/_loop.py" = ["TID251"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
-"asyncio".msg = "inject Clock (franca.core.clock) instead; asyncio is allowed only in core/clock.py"
+"asyncio".msg = "inject a Clock (franca.core.clock) instead; src/ stays loop-neutral"
 
 [tool.ruff.lint.flake8-type-checking]
 # pydantic evaluates field annotations at class creation; without this, TC001-TC003
@@ -118,18 +144,7 @@ quote-style = "double"
 
 [tool.mypy]
 python_version = "3.12"
-# One invocation covers the whole workspace. Test module basenames must stay
-# unique across members: mypy maps tests/test_x.py to the module `test_x`, and
-# two members with the same basename collide even though pytest tolerates it.
-files = [
-  "libs/franca/src",
-  "libs/franca/tests",
-  "libs/validia/src",
-  "libs/validia/tests",
-  "libs/whence/src",
-  "libs/whence/tests",
-  "libs/whence/examples",
-]
+files = ["src", "tests"]
 strict = true
 warn_unreachable = true
 enable_error_code = [
@@ -138,31 +153,22 @@ enable_error_code = [
   "truthy-bool",
   "ignore-without-code",
 ]
-# Deliberately NOT ignore_missing_imports: with near-zero runtime dependencies,
-# a missing stub is real signal rather than noise.
+# Deliberately NOT ignore_missing_imports: franca and whence both ship py.typed,
+# so a missing stub is real signal rather than noise.
 
 [tool.pytest]
 minversion = "9.1"
 # Arrays, not whitespace-separated strings — this is the native pytest 9 table,
 # not the legacy string-typed [tool.pytest.ini_options].
-addopts = [
-  "-ra", "--strict-markers", "--strict-config", "--import-mode=importlib",
-  # Live provider calls are opt-in: `make test-contract` (or -m contract) runs them.
-  "-m", "not contract and not container",
-]
-markers = [
-  "contract: live provider call; needs keys",
-  "container: needs a real container mount; run with `make test-docker`",
-]
-# One collection root for the workspace; each member keeps its own tests/ dir.
-testpaths = ["libs"]
+addopts = ["-ra", "--strict-markers", "--strict-config", "--import-mode=importlib"]
+testpaths = ["tests"]
 # importlib import mode leaves sys.path alone, so the suite exercises the
 # installed package rather than the source tree next to it.
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
-source = ["libs/franca/src", "libs/validia/src", "libs/whence/src"]
+source = ["src"]
 branch = true
 
 [tool.coverage.report]

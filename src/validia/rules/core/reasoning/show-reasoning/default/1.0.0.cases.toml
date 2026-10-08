@@ -1,0 +1,4 @@
+# Cases for reasoning/show-reasoning 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = ["Show your reasoning before the answer.", "Write notes in <scratchpad> tags."]
+quiet = ["Give the answer, then one sentence on why."]

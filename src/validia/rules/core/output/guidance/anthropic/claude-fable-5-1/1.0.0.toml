@@ -1,0 +1,16 @@
+# How to write output for anthropic/claude-fable-5-1 models: what the layers
+# beside it encode as rules, said as instructions.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+summary = "Fable 5.1 under-formats: it leans to plain paragraphs even where a list would help the reader."
+instructions = [
+  "Describe the format you want -- a numbered list for steps, short paragraphs otherwise -- instead of banning structure.",
+  "Give one complete example of the output when the format matters.",
+]
+sources = [
+  "Claude API docs: What's new in Claude Fable 5.1",
+  "Anthropic, Prompting Claude Fable 5.1",
+  "Anthropic skills repository, prompt-audit guide",
+]

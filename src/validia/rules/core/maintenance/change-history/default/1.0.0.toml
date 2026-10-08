@@ -1,0 +1,9 @@
+# maintenance/change-history, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Describes a change instead of how it works now"
+pattern = "now works? differently|no longer|instead of"
+confidence = "low"
+fix = "Describe how things work now, without the history."
