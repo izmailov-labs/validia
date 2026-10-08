@@ -16,6 +16,7 @@ theme:
   name: material
   features:
     - content.code.copy
+    - navigation.indexes
     - navigation.sections
     - navigation.top
     - search.suggest
@@ -41,9 +42,22 @@ theme:
 watch:
   - src
 
-# The rule catalog on rules.md is generated from the installed package at build time.
+# The tables on docs/rules/ are generated from the installed package at build time, with
+# a release dropdown per category.
 hooks:
   - docs/_hooks/rules_catalog.py
+
+extra_css:
+  - stylesheets/rules.css
+
+extra_javascript:
+  - javascripts/rules-releases.js
+
+# A page missing from the nav fails --strict: the hook already fails it for a rules
+# target with no page, and this keeps every such page reachable.
+validation:
+  nav:
+    omitted_files: warn
 
 plugins:
   - search
@@ -61,12 +75,25 @@ plugins:
 nav:
   - Home: index.md
   - Getting started: getting-started.md
-  - Prompt rules: rules.md
+  - Prompt rules:
+      - rules/index.md
+      - rules/default.md
+      - Anthropic:
+          - rules/anthropic/index.md
+          - rules/anthropic/claude-fable-5-1.md
+          - rules/anthropic/claude-opus-5.md
+          - rules/anthropic/claude-opus-5-5.md
+          - rules/anthropic/claude-sonnet-5-5.md
+      - rules/google/index.md
+      - rules/openai/index.md
+      - Rule versions: rules/releases.md
+      - rules/custom.md
   - API reference: api.md
   - Changelog: changelog.md
 
 markdown_extensions:
   - admonition
+  - md_in_html
   - pymdownx.details
   - pymdownx.highlight
   - pymdownx.superfences

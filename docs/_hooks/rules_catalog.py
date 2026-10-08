@@ -1,62 +1,145 @@
-"""Write the rule catalog on the prompt rules page from the rules validia ships.
+"""Write the prompt rules pages from the rules validia ships.
 
-mkdocs runs this file as a hook (``hooks:`` in ``mkdocs.yml``). The page holds a
-marker, and every build replaces it with tables read through ``validia.rules``, so
-the catalog lists the rules in the installed package and cannot drift from them.
+mkdocs runs this file as a hook (``hooks:`` in ``mkdocs.yml``). ``docs/rules/`` mirrors
+the core rule tree: ``default.md`` for the default files, ``<provider>/index.md`` for a
+provider's, ``<provider>/<model>.md`` for one model's. Each page holds a marker, and
+every build replaces it with tables read through ``validia.rules``, so the pages show
+the rules in the installed package and cannot drift from them.
+
+Each category is written once per release, as a pin to that release reads it, with a
+dropdown to choose between them (``docs/javascripts/rules-releases.js``). Without
+JavaScript the latest shows, and only the latest is indexed for search.
+
+A core target without a page is a warning, so ``mkdocs build --strict`` fails until the
+page is written; ``validation.nav.omitted_files`` then fails it until the page is in
+the nav.
 """
 
-from collections.abc import Mapping
+import logging
+import posixpath
+import re
+from collections.abc import Callable, Iterable
+from functools import partial
+from importlib.resources.abc import Traversable
+from pathlib import Path
+from typing import Protocol
 
-from validia.rules import Rule, RulePack, core_categories, core_releases, verify_core
+from validia.rules import (
+    Guidance,
+    Release,
+    Rule,
+    RulePack,
+    core_categories,
+    core_releases,
+    core_targets,
+    default_rules,
+    verify_core,
+)
 
-MARKER = "<!-- rules-catalog -->"
+ROOT = "rules"
+"""The docs folder the pages live in."""
+
+
+_MARKER = re.compile(r"<!-- rules-(page|targets|releases)(?::\s*(\S+))? -->")
 
 
 _READS = {"prompt": "prompt", "tool_description": "tool descriptions"}
 
 
-def on_page_markdown(markdown: str, **_: object) -> str:
-    """Replace the catalog marker, on whichever page holds it, with the catalog.
+_LISTED = 3  # a change carried by more files than this names a count, not the files
+
+
+_log = logging.getLogger("mkdocs.hooks.rules")  # under mkdocs, so --strict counts it
+
+
+class _File(Protocol):
+    @property
+    def src_uri(self) -> str: ...
+
+
+class _Page(Protocol):
+    @property
+    def file(self) -> _File: ...
+
+
+def on_files(files: Iterable[_File], **_: object) -> None:
+    """Warn about every core target that has no page.
+
+    Args:
+        files: Every file in the docs folder.
+        **_: The config mkdocs passes; unused.
+    """
+    present = {file.src_uri for file in files}
+    for target in _catalog(None).targets:
+        page = page_of(target)
+        if page not in present:
+            _log.warning("the rules have files for %s, but the docs have no %s", target, page)
+
+
+def on_page_markdown(markdown: str, *, page: _Page, **_: object) -> str:
+    """Replace the rules markers on a page with what they stand for.
 
     Args:
         markdown: The page's Markdown source.
-        **_: The page, config and files mkdocs passes; unused.
+        page: The page; its path makes the links relative.
+        **_: The config and files mkdocs passes; unused.
 
     Returns:
-        The page, with the marker replaced.
+        The page, with every marker replaced.
     """
-    if MARKER not in markdown:
-        return markdown
-    return markdown.replace(MARKER, catalog())
+    return expand(markdown, page.file.src_uri)
 
 
-def catalog() -> str:
-    """Describe every core target, then every rule, category by category.
+def expand(markdown: str, src_uri: str, folder: Traversable | Path | None = None) -> str:
+    """Replace every rules marker in a page's Markdown.
+
+    ``<!-- rules-page: <target> -->`` becomes that target's rules,
+    ``<!-- rules-targets -->`` a table of every target, and ``<!-- rules-releases -->``
+    every category's releases.
+
+    Args:
+        markdown: The page's Markdown source.
+        src_uri: The page's path in the docs folder, as ``rules/anthropic/index.md``.
+        folder: Where the rules live; the package's own when omitted.
 
     Returns:
-        Markdown: a table of targets, then a section per category.
+        The page, with every marker replaced.
     """
-    # verify_core reads each target along its own chain, exactly as lint would, and
-    # hands back the pack it read; the checks it also runs are the test suite's job.
-    packs: dict[str, dict[str, RulePack]] = {}
-    for category, target, pack, _ in verify_core():
-        packs.setdefault(category, {})[target] = pack
-    sections = [_targets(packs)]
-    sections += [_category(category, packs.get(category, {})) for category in core_categories()]
-    return "\n\n".join(sections)
+    catalog = _catalog(folder)
+
+    def replace(match: re.Match[str]) -> str:
+        kind, target = match[1], match[2]
+        if kind == "targets":
+            return catalog.targets_table(src_uri)
+        if kind == "releases":
+            return catalog.releases_page()
+        if target not in catalog.targets:
+            _log.warning("%s names %r, which is not a target of the rules", src_uri, target)
+            return ""
+        return catalog.page(target, src_uri)
+
+    return _MARKER.sub(replace, markdown)
 
 
-def _changed_at(target: str, rule: Rule) -> bool:
-    """Whether the last file laid over a rule is the target's own."""
-    return rule.origin[-1].startswith(f"{target} ")
+def page_of(target: str) -> str:
+    """Name the page a target is documented on.
 
+    Args:
+        target: ``default``, ``<provider>/default`` or ``<provider>/<model>``.
 
-def _parent(target: str, packs: Mapping[str, RulePack]) -> RulePack | None:
-    """The pack a target's files are laid over: its vendor's, else the default."""
+    Returns:
+        Its path in the docs folder, as ``rules/anthropic/claude-opus-5-5.md``.
+    """
+    if target == "default":
+        return f"{ROOT}/default.md"
     provider, _, model = target.partition("/")
-    if model != "default" and f"{provider}/default" in packs:
-        return packs[f"{provider}/default"]
-    return packs.get("default")
+    return f"{ROOT}/{provider}/{'index' if model == 'default' else model}.md"
+
+
+def _link(target: str, src_uri: str) -> str:
+    """A Markdown link from one page to a target's page."""
+    path = posixpath.relpath(page_of(target), posixpath.dirname(src_uri))
+    return f"[`{target}`]({path})"
 
 
 def _reading_order(target: str) -> tuple[bool, str, bool, str]:
@@ -65,112 +148,334 @@ def _reading_order(target: str) -> tuple[bool, str, bool, str]:
     return (target != "default", provider, model != "default", model)
 
 
-def _read_for(target: str) -> str:
-    provider, _, model = target.partition("/")
-    if target == "default":
-        return "every model"
-    if model == "default":
-        return f"every `{provider}:` model"
-    return f"`{provider}:{model}` only"
+def _changed_at(target: str, rule: Rule) -> bool:
+    """Whether the last file laid over a rule is the target's own."""
+    return rule.origin[-1].startswith(f"{target} ")
 
 
-def _targets(packs: Mapping[str, Mapping[str, RulePack]]) -> str:
-    """A table of every target folder the core has, and what its files do."""
-    changes: dict[str, list[str]] = {}
-    guidance: dict[str, list[str]] = {}
-    for category, by_target in packs.items():
-        for target, pack in by_target.items():
-            changes.setdefault(target, [])
-            guidance.setdefault(target, [])
-            if target != "default":
-                changes[target] += [rule.id for rule in pack.rules if _changed_at(target, rule)]
-            if any(note.target == target for note in pack.guidance):
-                guidance[target].append(category)
-    order = sorted(changes, key=_reading_order)
-    rows = [
-        "| Target | Read for | Rules it changes | Guidance for |",
-        "|---|---|---|---|",
-    ]
-    total = sum(
-        len(by_target["default"].rules) for by_target in packs.values() if "default" in by_target
-    )
-    for target in order:
-        if target == "default":
-            changed = f"defines all {total}"
-        else:
-            changed = ", ".join(f"`{rule}`" for rule in changes[target]) or "—"
-        notes = ", ".join(guidance[target]) or "—"
-        rows.append(f"| `{target}` | {_read_for(target)} | {changed} | {notes} |")
-    return "\n".join(rows)
-
-
-def _severity(rule: Rule) -> str:
-    """A rule's severity across the models its file reaches."""
+def _severity(rule: Rule, *, brief: bool = False) -> str:
+    """A rule's severity across the models its file reaches; brief counts long lists."""
     if not rule.models:
         return rule.severity
+    if brief and len(rule.models) > _LISTED:
+        return f"{rule.severity} on {len(rule.models)} models; {rule.otherwise} on the rest"
     named = ", ".join(f"`{glob}`" for glob in rule.models)
     return f"{rule.severity} on {named}; {rule.otherwise} on the rest"
 
 
-def _change(target: str, rule: Rule, base: Rule | None) -> str:
-    """What one target's file did to a rule, in a few words."""
+def _change(rule: Rule, base: Rule | None, *, brief: bool = False) -> str:
+    """What the last file laid over a rule did to it, in a few words."""
     last = rule.origin[-1].split(" ")
     kind = last[2] if len(last) > 2 else "defines"
     if base is None or kind == "replace":
         lead = "replaced" if kind == "replace" else "defined here"
-        return f"`{target}`: {lead}, {_severity(rule)}"
-    said = [_severity(rule)] if _severity(rule) != _severity(base) else []
+        return f"{lead}, {_severity(rule, brief=brief)}"
+    said = [_severity(rule, brief=brief)] if _severity(rule) != _severity(base) else []
     if rule.pattern != base.pattern:
         said.append("own pattern")
     if rule.fix != base.fix:
         said.append("own fix")
-    return f"`{target}`: {', '.join(said) or 'more cases'}"
+    return ", ".join(said) or "more cases"
 
 
-def _category(category: str, packs: Mapping[str, RulePack]) -> str:
-    """A category's latest release, its guidance targets and a table of its rules."""
-    default = packs.get("default")
-    base = {rule.id: rule for rule in default.rules} if default is not None else {}
-    order = list(base)
-    found: dict[str, Rule] = dict(base)
-    notes: dict[str, list[str]] = {}
-    for target, pack in packs.items():
+def _row(*cells: str) -> str:
+    return "| " + " | ".join(cell.replace("\n", " ") for cell in cells) + " |"
+
+
+def _title(rule: Rule) -> str:
+    return rule.title.replace("|", "\\|")
+
+
+def _guidance(notes: Iterable[Guidance], src_uri: str) -> list[str]:
+    """Writing guidance as collapsed admonitions, one per target that says it."""
+    lines: list[str] = []
+    for note in notes:
+        lines += ["", f'??? tip "Writing for {note.target}"', "", f"    {note.summary}", ""]
+        lines += [f"    - {instruction}" for instruction in note.instructions]
+        if note.sources:
+            lines += ["", "    Sources: " + "; ".join(note.sources) + "."]
+        lines += ["", f"    From {_link(note.target, src_uri)}, {note.version}."]
+    return lines
+
+
+class _Catalog:
+    """The core rules, read once per build, and the Markdown each page needs."""
+
+    def __init__(self, folder: Traversable | Path | None) -> None:
+        self.folder = folder
+        self.categories = core_categories(folder)
+        found = {target for category in self.categories for target in self._targets(category)}
+        self.targets: tuple[str, ...] = tuple(sorted(found, key=_reading_order))
+        self._packs: dict[tuple[str, str], dict[str, RulePack]] = {}
+
+    def _targets(self, category: str) -> tuple[str, ...]:
+        return core_targets(category, self.folder)
+
+    def releases(self, category: str) -> tuple[Release, ...]:
+        """A category's releases, newest first."""
+        return tuple(reversed(core_releases(category, self.folder)))
+
+    def packs(self, category: str, version: str) -> dict[str, RulePack]:
+        """Every target of a category with files, as a pin to one release reads it."""
+        key = (category, version)
+        if key not in self._packs:
+            # verify_core reads each target along its own chain, exactly as lint would,
+            # and hands back the pack it read; its checks are the test suite's job.
+            proved = verify_core(
+                pins={category: version}, categories=[category], folder=self.folder
+            )
+            self._packs[key] = {target: pack for _, target, pack, _ in proved}
+        return self._packs[key]
+
+    def model_pack(self, target: str, category: str, version: str) -> RulePack:
+        """One model's whole chain in a category, whether or not it has files there."""
+        provider, _, model = target.partition("/")
+        return default_rules(
+            (provider, model), pins={category: version}, categories=[category], folder=self.folder
+        )
+
+    def by_release(self, category: str, view: Callable[[Release], list[str]]) -> list[str]:
+        """A category's release dropdown, then one view per release, newest first."""
+        releases = self.releases(category)
+        options = "".join(
+            f'<option value="{release.version}"{" selected" if index == 0 else ""}>'
+            f"{release.version}{' (latest)' if index == 0 else ''}</option>"
+            for index, release in enumerate(releases)
+        )
+        lines = [
+            '<div class="rules-release">',
+            f'<label for="rules-release-{category}">Release</label>',
+            f'<select id="rules-release-{category}" class="rules-release__select"'
+            f' data-category="{category}">{options}</select>',
+            "</div>",
+        ]
+        for index, release in enumerate(releases):
+            # Older releases start hidden, and stay out of search: a hit there would
+            # land on a table the reader cannot see.
+            older = ' hidden="hidden" data-search-exclude=""' if index else ""
+            pin = f'`{category} = "{release.version}"` under `[lint.rules]`'
+            lines += [
+                "",
+                f'<div class="rules-release__view" data-category="{category}"'
+                f' data-release="{release.version}"{older} markdown>',
+                "",
+                f"Released {release.released}; a pin reads it as {pin}.",
+                *view(release),
+                "",
+                "</div>",
+            ]
+        return lines
+
+    def page(self, target: str, src_uri: str) -> str:
+        """Every category, as one target's page shows it."""
+        provider, _, model = target.partition("/")
         if target == "default":
-            continue
-        here = {rule.id: rule for rule in pack.rules}
-        for rule in pack.rules:
-            if not _changed_at(target, rule):
+            intro, view = self._default_intro(src_uri), self._default_view
+        elif model == "default":
+            intro, view = self._provider_intro(provider, src_uri), self._provider_view
+        else:
+            intro, view = self._model_intro(target, src_uri), self._model_view
+        lines = [intro]
+        for category in self.categories:
+            if model == "default" and target not in self._targets(category):
+                continue  # a provider page shows only the categories it has files in
+            lines += ["", f"## {category}", ""]
+            lines += self.by_release(category, partial(view, target, category, src_uri))
+        return "\n".join(lines)
+
+    def _default_intro(self, src_uri: str) -> str:
+        return (
+            "Every rule, as its default file defines it for every model. A provider's or"
+            " model's files change some of them; the last column names those, and their"
+            " pages show each model's view. Without `-m`, `validia lint` reads only these."
+        )
+
+    def _default_view(self, target: str, category: str, src: str, release: Release) -> list[str]:
+        packs = self.packs(category, release.version)
+        base = {rule.id: rule for rule in packs["default"].rules} if "default" in packs else {}
+        order, found = list(base), dict(base)
+        notes: dict[str, list[str]] = {}
+        for other in sorted(packs, key=_reading_order):
+            if other == "default":
                 continue
-            if rule.id not in found:
-                found[rule.id] = rule
-                order.append(rule.id)
-            notes.setdefault(rule.id, []).append(_change(target, rule, base.get(rule.id)))
-        parent = _parent(target, packs)
-        for rule in parent.rules if parent is not None else ():
-            if rule.id not in here:
-                notes.setdefault(rule.id, []).append(f"`{target}`: off")
-    latest = core_releases(category)[-1]
-    guided = sorted(
-        {note.target for pack in packs.values() for note in pack.guidance},
-        key=_reading_order,
-    )
-    lines = [
-        f"### {category}",
-        "",
-        f"Latest release **{latest.version}**, {latest.released}.",
-    ]
-    if guided:
-        lines[-1] += " Writing guidance for " + ", ".join(f"`{t}`" for t in guided) + "."
-    lines += [
-        "",
-        "| Rule | Finds | Reads | Default | Changed by provider or model |",
-        "|---|---|---|---|---|",
-    ]
-    for rule_id in order:
-        rule = found[rule_id]
-        every = base[rule_id].severity if rule_id in base else "—"
-        reads = " and ".join(_READS[scope] for scope in rule.scope)
-        changed = "<br>".join(notes.get(rule_id, [])) or "—"
-        title = rule.title.replace("|", "\\|")
-        lines.append(f"| `{rule_id}` | {title} | {reads} | {every} | {changed} |")
-    return "\n".join(lines)
+            pack = packs[other]
+            here = {rule.id for rule in pack.rules}
+            for rule in pack.rules:
+                if _changed_at(other, rule):
+                    if rule.id not in found:
+                        found[rule.id] = rule
+                        order.append(rule.id)
+                    change = _change(rule, base.get(rule.id), brief=True)
+                    notes.setdefault(rule.id, []).append(f"{_link(other, src)}: {change}")
+            provider, _, model = other.partition("/")
+            vendor = packs.get(f"{provider}/default") if model != "default" else None
+            parent = vendor or packs.get("default")
+            for rule in parent.rules if parent is not None else ():
+                if rule.id not in here:
+                    notes.setdefault(rule.id, []).append(f"{_link(other, src)}: off")
+        lines = [
+            "",
+            _row("Rule", "Finds", "Reads", "Severity", "Changed by provider or model"),
+            _row("---", "---", "---", "---", "---"),
+        ]
+        for rule_id in order:
+            rule = found[rule_id]
+            every = base[rule_id].severity if rule_id in base else "—"
+            reads = " and ".join(_READS[scope] for scope in rule.scope)
+            changed = "<br>".join(notes.get(rule_id, [])) or "—"
+            lines.append(_row(f"`{rule_id}`", _title(rule), reads, every, changed))
+        return lines
+
+    def _provider_intro(self, provider: str, src_uri: str) -> str:
+        models = [
+            t for t in self.targets if t.startswith(f"{provider}/") and t != f"{provider}/default"
+        ]
+        text = (
+            f"What the `{provider}/default` files change, laid over the"
+            f" {_link('default', src_uri)} rules for every `{provider}:` model."
+            " Every rule not listed here reads as it does by default."
+        )
+        if models:
+            pages = ", ".join(_link(model, src_uri) for model in models)
+            text += (
+                f" These models also have files of their own: {pages}. Any other"
+                f" `{provider}:` model reads the default rules and this page's changes."
+            )
+        return text
+
+    def _provider_view(self, target: str, category: str, src: str, release: Release) -> list[str]:
+        packs = self.packs(category, release.version)
+        pack = packs.get(target)
+        base_pack = packs.get("default")
+        base = {rule.id: rule for rule in base_pack.rules} if base_pack is not None else {}
+        lines = (
+            _guidance([note for note in pack.guidance if note.target == target], src)
+            if pack
+            else []
+        )
+        changed = [rule for rule in pack.rules if _changed_at(target, rule)] if pack else []
+        off = [
+            rule_id
+            for rule_id in base
+            if pack is not None and rule_id not in {r.id for r in pack.rules}
+        ]
+        if not changed and not off:
+            return [*lines, "", "No rule changes in this release."]
+        provider = target.partition("/")[0]
+        lines += [
+            "",
+            _row("Rule", "Finds", "Default", f"On `{provider}:` models"),
+            _row("---", "---", "---", "---"),
+        ]
+        for rule in changed:
+            every = base[rule.id].severity if rule.id in base else "—"
+            lines.append(
+                _row(f"`{rule.id}`", _title(rule), every, _change(rule, base.get(rule.id)))
+            )
+        lines += [
+            _row(f"`{rule_id}`", _title(base[rule_id]), base[rule_id].severity, "off")
+            for rule_id in off
+        ]
+        return lines
+
+    def _model_intro(self, target: str, src_uri: str) -> str:
+        provider, _, model = target.partition("/")
+        chain = " → ".join(
+            _link(t, src_uri)
+            for t in ("default", f"{provider}/default", target)
+            if t in self.targets
+        )
+        return (
+            f"Every rule as `validia lint -m {provider}:{model}` reads it, along {chain}."
+            " **On this model** is the severity `lint` gives it, in bold beside the default"
+            " where the two differ."
+        )
+
+    def _model_view(self, target: str, category: str, src: str, release: Release) -> list[str]:
+        model = target.partition("/")[2]
+        pack = self.model_pack(target, category, release.version)
+        default = self.packs(category, release.version).get("default")
+        base = {rule.id: rule for rule in default.rules} if default is not None else {}
+        lines = _guidance(pack.guidance, src)
+        lines += [
+            "",
+            _row("Rule", "Finds", "On this model", "From"),
+            _row("---", "---", "---", "---"),
+        ]
+        for rule in pack.rules:
+            here = rule.severity_for(model)
+            every = base[rule.id].severity if rule.id in base else "—"
+            shown = f"**{here}** (default {every})" if here != every else here
+            layers = [
+                entry.split(" ")[0] for entry in rule.origin if not entry.startswith("default ")
+            ]
+            files = "<br>".join(_link(layer, src) for layer in dict.fromkeys(layers)) or "—"
+            lines.append(_row(f"`{rule.id}`", _title(rule), shown, files))
+        off = [rule_id for rule_id in base if rule_id not in {rule.id for rule in pack.rules}]
+        if off:
+            lines += [
+                "",
+                "Off on this model: " + ", ".join(f"`{rule_id}`" for rule_id in off) + ".",
+            ]
+        return lines
+
+    def targets_table(self, src_uri: str) -> str:
+        """Every target the core has files for, and what each one's files do."""
+        changes: dict[str, list[str]] = {target: [] for target in self.targets}
+        guidance: dict[str, list[str]] = {target: [] for target in self.targets}
+        total = 0
+        for category in self.categories:
+            packs = self.packs(category, self.releases(category)[0].version)
+            total += len(packs["default"].rules) if "default" in packs else 0
+            for target, pack in packs.items():
+                if target != "default":
+                    changes[target] += [rule.id for rule in pack.rules if _changed_at(target, rule)]
+                if any(note.target == target for note in pack.guidance):
+                    guidance[target].append(category)
+        lines = [
+            _row("Target", "Read for", "Rules it changes", "Guidance for"),
+            _row("---", "---", "---", "---"),
+        ]
+        for target in self.targets:
+            provider, _, model = target.partition("/")
+            if target == "default":
+                reach, changed = "every model", f"defines all {total}"
+            else:
+                reach = (
+                    f"every `{provider}:` model" if model == "default" else f"`{provider}:{model}`"
+                )
+                changed = ", ".join(f"`{rule}`" for rule in changes[target]) or "—"
+            notes = ", ".join(guidance[target]) or "—"
+            lines.append(_row(_link(target, src_uri), reach, changed, notes))
+        return "\n".join(lines)
+
+    def releases_page(self) -> str:
+        """Every category's releases, newest first, with what changed in each."""
+        lines: list[str] = []
+        for category in self.categories:
+            lines += ["", f"### {category}"]
+            for index, release in enumerate(self.releases(category)):
+                latest = " (latest)" if index == 0 else ""
+                lines += ["", f"**{release.version}**{latest}, released {release.released}:", ""]
+                for change, files in release.changes:
+                    where = (
+                        f"{len(files)} files"
+                        if len(files) > _LISTED
+                        else ", ".join(f"`{category}/{file}`" for file in files)
+                    )
+                    lines.append(f"- {change} ({where})")
+        return "\n".join(lines).lstrip("\n")
+
+
+_CORE: _Catalog | None = None
+"""The package's own rules, read once per build: mkdocs runs this file anew for each."""
+
+
+def _catalog(folder: Traversable | Path | None) -> _Catalog:
+    """The catalog for a rules folder; the package's own is read only once."""
+    global _CORE
+    if folder is not None:
+        return _Catalog(folder)
+    if _CORE is None:
+        _CORE = _Catalog(None)
+    return _CORE

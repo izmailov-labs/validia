@@ -191,7 +191,7 @@ rules 1.0.0 for anthropic:claude-sonnet-5-5: 3 findings (1 error, 1 warn, 1 info
 
 It exits 1 when a finding reaches `--fail-on` (`lint.fail_on`). Which rules apply, and
 how severe each is, depends on the model, the provider that serves it and the release of
-the rules you pin. [Prompt rules](rules.md) covers all three, how to add rules of your
+the rules you pin. [Prompt rules](rules/index.md) covers all three, how to add rules of your
 own, and lists every rule validia ships.
 
 ### Models and API keys
