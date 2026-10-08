@@ -16,11 +16,16 @@ These pages follow the same layout as the rules themselves:
 
 | Page | Shows |
 |---|---|
-| [Default](default.md) | every rule, as its default file defines it for every model |
+| [Default](default.md) | every rule, as its default file defines it for every model, with its examples |
 | A provider, such as [Anthropic](anthropic/index.md) | what that provider's files change, for every one of its models |
-| A model, such as [claude-opus-5-5](anthropic/claude-opus-5-5.md) | every rule as that model sees it, with its writing guidance |
+| A model, such as [claude-opus-5-5](anthropic/claude-opus-5-5.md) | every rule as that model sees it, with its writing guidance and examples for the rules it changes |
 | [Rule versions](releases.md) | how releases and pins work, and what changed in each release |
 | [Your own rules](custom.md) | a project's `rules/` folder, and the rule file reference |
+
+Every rule comes with an example: its **cause and effect** (what the prompt says, and what
+that does to the model), **negative** text it flags, with the exact words it flags,
+**positive** text it stays quiet on, and its fix. Each category also shows whole prompts,
+before and after, with every rule that fires on them.
 
 Every rules page has a release dropdown on each category: it shows the category as a pin
 to that release reads it. The tables are generated from the installed package when the

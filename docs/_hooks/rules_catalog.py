@@ -10,21 +10,28 @@ Each category is written once per release, as a pin to that release reads it, wi
 dropdown to choose between them (``docs/javascripts/rules-releases.js``). Without
 JavaScript the latest shows, and only the latest is indexed for search.
 
+Every rule comes with its examples: the cause and effect from ``docs/rules/effects.toml``,
+the text it fires on (negative) and stays quiet on (positive), and its fix. Each
+category's whole-prompt examples follow its rules.
+
 A core target without a page is a warning, so ``mkdocs build --strict`` fails until the
 page is written; ``validation.nav.omitted_files`` then fails it until the page is in
-the nav.
+the nav. A rule without a cause and effect, or an entry for no rule, is a warning too.
 """
 
+import html
 import logging
 import posixpath
 import re
-from collections.abc import Callable, Iterable
+import tomllib
+from collections.abc import Callable, Iterable, Mapping
 from functools import partial
 from importlib.resources.abc import Traversable
 from pathlib import Path
 from typing import Protocol
 
 from validia.rules import (
+    Example,
     Guidance,
     Release,
     Rule,
@@ -38,6 +45,14 @@ from validia.rules import (
 
 ROOT = "rules"
 """The docs folder the pages live in."""
+
+
+EFFECTS = Path(__file__).resolve().parents[1] / ROOT / "effects.toml"
+"""Each rule's cause and effect, which only the docs read."""
+
+
+Effects = Mapping[str, tuple[str, str]]
+"""Rule ids to their cause and their effect."""
 
 
 _MARKER = re.compile(r"<!-- rules-(page|targets|releases)(?::\s*(\S+))? -->")
@@ -70,10 +85,16 @@ def on_files(files: Iterable[_File], **_: object) -> None:
         **_: The config mkdocs passes; unused.
     """
     present = {file.src_uri for file in files}
-    for target in _catalog(None).targets:
+    catalog = _catalog(None)
+    for target in catalog.targets:
         page = page_of(target)
         if page not in present:
             _log.warning("the rules have files for %s, but the docs have no %s", target, page)
+    rules = catalog.rule_ids()
+    for rule_id in sorted(rules - set(catalog.effects)):
+        _log.warning("%s has no cause and effect for %s", EFFECTS.name, rule_id)
+    for rule_id in sorted(set(catalog.effects) - rules):
+        _log.warning("%s names %s, which is not a rule", EFFECTS.name, rule_id)
 
 
 def on_page_markdown(markdown: str, *, page: _Page, **_: object) -> str:
@@ -90,7 +111,12 @@ def on_page_markdown(markdown: str, *, page: _Page, **_: object) -> str:
     return expand(markdown, page.file.src_uri)
 
 
-def expand(markdown: str, src_uri: str, folder: Traversable | Path | None = None) -> str:
+def expand(
+    markdown: str,
+    src_uri: str,
+    folder: Traversable | Path | None = None,
+    effects: Effects | None = None,
+) -> str:
     """Replace every rules marker in a page's Markdown.
 
     ``<!-- rules-page: <target> -->`` becomes that target's rules,
@@ -101,11 +127,12 @@ def expand(markdown: str, src_uri: str, folder: Traversable | Path | None = None
         markdown: The page's Markdown source.
         src_uri: The page's path in the docs folder, as ``rules/anthropic/index.md``.
         folder: Where the rules live; the package's own when omitted.
+        effects: Each rule's cause and effect; ``effects.toml`` when omitted.
 
     Returns:
         The page, with every marker replaced.
     """
-    catalog = _catalog(folder)
+    catalog = _catalog(folder, effects)
 
     def replace(match: re.Match[str]) -> str:
         kind, target = match[1], match[2]
@@ -198,11 +225,89 @@ def _guidance(notes: Iterable[Guidance], src_uri: str) -> list[str]:
     return lines
 
 
+def load_effects(path: Path = EFFECTS) -> dict[str, tuple[str, str]]:
+    """Read each rule's cause and effect.
+
+    Args:
+        path: The TOML file, one table per rule id with ``cause`` and ``effect``.
+
+    Returns:
+        Rule ids to their cause and their effect.
+    """
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    out: dict[str, tuple[str, str]] = {}
+    for rule_id, entry in data.items():
+        cause, effect = entry.get("cause"), entry.get("effect")
+        if isinstance(cause, str) and isinstance(effect, str):
+            out[rule_id] = (cause, effect)
+        else:
+            _log.warning("%s: %s needs a cause and an effect, as text", path.name, rule_id)
+    return out
+
+
+_MARKUP = str.maketrans({"*": "&#42;", "_": "&#95;", "`": "&#96;", "[": "&#91;", "\\": "&#92;"})
+
+
+def _code(text: str) -> str:
+    """Prompt text as inline code that keeps its lines, and is never read as Markdown."""
+    escaped = html.escape(text, quote=False).translate(_MARKUP)
+    return f"<code>{escaped.replace(chr(10), '<br>')}</code>"
+
+
+def _indent(lines: Iterable[str]) -> list[str]:
+    """Lines as the body of an admonition."""
+    return [f"    {line}" if line else "" for line in lines]
+
+
+def _rule_example(rule: Rule, flagged: str, model: str | None, effects: Effects) -> list[str]:
+    """One rule's examples, collapsed: cause and effect, negative, positive, fix."""
+    title = f"{rule.id}: {rule.title}".replace('"', "'")
+    body: list[str] = []
+    if rule.id in effects:
+        cause, effect = effects[rule.id]
+        body += [f"**Cause:** {cause}", "", f"**Effect:** {effect}", ""]
+    body += [f"✗ **Negative:** `lint` flags it as {flagged}.", ""]
+    for case in rule.fires:
+        hits = [finding.excerpt for finding in rule.scan(case, model) if finding.excerpt]
+        flags = " flags " + ", ".join(_code(hit) for hit in hits) if hits else ""
+        body.append(f"- {_code(case)}{flags}")
+    body += ["", "✓ **Positive:** `lint` stays quiet.", ""]
+    body += [f"- {_code(case)}" for case in rule.quiet]
+    body += ["", f"**Fix:** {rule.fix}"]
+    return ["", f'??? example "{title}"', "", *_indent(body)]
+
+
+def _prompt_example(example: Example, provider: str | None) -> list[str]:
+    """A whole-prompt example: red when rules fire on it, green when none do."""
+    kind = "failure" if example.fires else "success"
+    title = f"Whole prompt: {example.name}".replace('"', "'")
+    body: list[str] = []
+    if example.model is not None:
+        model = f"{provider}:{example.model}" if provider else example.model
+        body += [f"Linted as `{model}`.", ""]
+    body += ["```text", *example.text.splitlines(), "```", ""]
+    if not example.fires:
+        body.append("✓ `lint` flags nothing.")
+    else:
+        found = []
+        for rule_id in sorted(example.fires):
+            count = example.counts.get(rule_id)
+            severity = example.severities.get(rule_id)
+            found.append(
+                f"`{rule_id}`"
+                + (f" {count} times" if count else "")
+                + (f" as {severity}" if severity else "")
+            )
+        body.append("✗ `lint` flags " + ", ".join(found) + ".")
+    return ["", f'??? {kind} "{title}"', "", *_indent(body)]
+
+
 class _Catalog:
     """The core rules, read once per build, and the Markdown each page needs."""
 
-    def __init__(self, folder: Traversable | Path | None) -> None:
+    def __init__(self, folder: Traversable | Path | None, effects: Effects | None = None) -> None:
         self.folder = folder
+        self.effects: Effects = load_effects() if effects is None else effects
         self.categories = core_categories(folder)
         found = {target for category in self.categories for target in self._targets(category)}
         self.targets: tuple[str, ...] = tuple(sorted(found, key=_reading_order))
@@ -226,6 +331,16 @@ class _Catalog:
             )
             self._packs[key] = {target: pack for _, target, pack, _ in proved}
         return self._packs[key]
+
+    def rule_ids(self) -> set[str]:
+        """Every rule any release of any category has, for any target."""
+        return {
+            rule.id
+            for category in self.categories
+            for release in self.releases(category)
+            for pack in self.packs(category, release.version).values()
+            for rule in pack.rules
+        }
 
     def model_pack(self, target: str, category: str, version: str) -> RulePack:
         """One model's whole chain in a category, whether or not it has files there."""
@@ -324,6 +439,13 @@ class _Catalog:
             reads = " and ".join(_READS[scope] for scope in rule.scope)
             changed = "<br>".join(notes.get(rule_id, [])) or "—"
             lines.append(_row(f"`{rule_id}`", _title(rule), reads, every, changed))
+        for rule_id in order:
+            rule = found[rule_id]
+            flagged = f"**{base[rule_id].severity}**" if rule_id in base else _severity(rule)
+            lines += _rule_example(rule, flagged, None, self.effects)
+        if "default" in packs:
+            for example in packs["default"].examples:
+                lines += _prompt_example(example, None)
         return lines
 
     def _provider_intro(self, provider: str, src_uri: str) -> str:
@@ -359,9 +481,10 @@ class _Catalog:
             for rule_id in base
             if pack is not None and rule_id not in {r.id for r in pack.rules}
         ]
-        if not changed and not off:
-            return [*lines, "", "No rule changes in this release."]
         provider = target.partition("/")[0]
+        if not changed and not off:
+            examples = self._own_examples(pack, base_pack, provider)
+            return [*lines, "", "No rule changes in this release.", *examples]
         lines += [
             "",
             _row("Rule", "Finds", "Default", f"On `{provider}:` models"),
@@ -376,7 +499,23 @@ class _Catalog:
             _row(f"`{rule_id}`", _title(base[rule_id]), base[rule_id].severity, "off")
             for rule_id in off
         ]
+        for rule in changed:
+            lines += _rule_example(rule, _severity(rule), None, self.effects)
+        lines += self._own_examples(pack, base_pack, provider)
         return lines
+
+    @staticmethod
+    def _own_examples(pack: RulePack | None, under: RulePack | None, provider: str) -> list[str]:
+        """The whole-prompt examples a pack has that the pack beneath it does not."""
+        if pack is None:
+            return []
+        seen = {(e.name, e.text) for e in under.examples} if under is not None else set()
+        return [
+            line
+            for example in pack.examples
+            if (example.name, example.text) not in seen
+            for line in _prompt_example(example, provider)
+        ]
 
     def _model_intro(self, target: str, src_uri: str) -> str:
         provider, _, model = target.partition("/")
@@ -402,6 +541,7 @@ class _Catalog:
             _row("Rule", "Finds", "On this model", "From"),
             _row("---", "---", "---", "---"),
         ]
+        changed: list[Rule] = []
         for rule in pack.rules:
             here = rule.severity_for(model)
             every = base[rule.id].severity if rule.id in base else "—"
@@ -411,12 +551,28 @@ class _Catalog:
             ]
             files = "<br>".join(_link(layer, src) for layer in dict.fromkeys(layers)) or "—"
             lines.append(_row(f"`{rule.id}`", _title(rule), shown, files))
+            if layers:
+                changed.append(rule)
         off = [rule_id for rule_id in base if rule_id not in {rule.id for rule in pack.rules}]
         if off:
             lines += [
                 "",
                 "Off on this model: " + ", ".join(f"`{rule_id}`" for rule_id in off) + ".",
             ]
+        for rule in changed:
+            here = rule.severity_for(model)
+            lines += _rule_example(rule, f"**{here}** on this model", model, self.effects)
+        provider = target.partition("/")[0]
+        lines += [
+            line
+            for example in pack.examples
+            if example.model == model
+            for line in _prompt_example(example, provider)
+        ]
+        lines += [
+            "",
+            f"Examples for every other rule are on the {_link('default', src)} page.",
+        ]
         return lines
 
     def targets_table(self, src_uri: str) -> str:
@@ -471,11 +627,11 @@ _CORE: _Catalog | None = None
 """The package's own rules, read once per build: mkdocs runs this file anew for each."""
 
 
-def _catalog(folder: Traversable | Path | None) -> _Catalog:
+def _catalog(folder: Traversable | Path | None, effects: Effects | None = None) -> _Catalog:
     """The catalog for a rules folder; the package's own is read only once."""
     global _CORE
-    if folder is not None:
-        return _Catalog(folder)
+    if folder is not None or effects is not None:
+        return _Catalog(folder, effects)
     if _CORE is None:
         _CORE = _Catalog(None)
     return _CORE

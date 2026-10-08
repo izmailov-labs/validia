@@ -6,11 +6,12 @@ repo_name: izmailov-labs/validia
 edit_uri: edit/main/docs/
 copyright: Copyright &copy; 2026 izmailov-labs
 
-# docs/research/ holds internal working notes, not published documentation, and
-# docs/_hooks/ the build's own code.
+# docs/research/ holds internal working notes, not published documentation;
+# docs/_hooks/ is the build's own code, and rules/effects.toml its data.
 exclude_docs: |
   research/
   _hooks/
+  rules/effects.toml
 
 theme:
   name: material
