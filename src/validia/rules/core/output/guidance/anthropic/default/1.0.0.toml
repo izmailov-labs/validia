@@ -1,0 +1,16 @@
+# How to write output for anthropic models: what the layers
+# beside it encode as rules, said as instructions.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+summary = "Fable 5.1 and Sonnet 5.5 narrate progress between tool calls; the request settings decide where updates go."
+instructions = [
+  "Ask for progress updates in the request (display 'updates') rather than writing 'hold all findings' or 'don't narrate'.",
+  "Ask for JSON with structured outputs or a strict tool, not with 'output ONLY valid JSON'.",
+]
+sources = [
+  "Claude API docs: Structured outputs, Errors, thinking display",
+  "Anthropic, Prompting Claude Sonnet 5.5",
+  "Anthropic skills repository, prompt-audit guide",
+]

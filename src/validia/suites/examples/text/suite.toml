@@ -1,0 +1,61 @@
+# An example validia suite for free-text answers: questions about a product,
+# answered from its help notes. Check it without calling a model:
+#
+#   validia run $suite_path --model MODEL --dry-run
+#
+# The expected answers live here and the prompt lives in its own file, so the
+# model under test only ever sees prompt.md and each case's input.
+#
+# Settings for this suite alone -- another model, more reps, another
+# provider -- go in a validia.toml next to this file.
+
+description = "Answer product questions from the help notes, and admit what they do not cover."
+prompt = "prompt.md"  # the system prompt under test, relative to this file
+
+[grade]
+# Free text has many right phrasings, so each case checks what a right answer
+# must say, not how it says it: `contains` and `not_contains` ignore case and
+# spacing; `matches` is a regular expression (add (?i) to ignore case);
+# `equals` is for the rare answer with one right wording.
+type = "text"
+
+# Half the questions are covered by the help notes and half are not. The
+# uncovered ones are where a prompt that guesses fails: the right answer
+# there is to point at support, not to invent a feature. Tags are ordered,
+# and results are grouped by the first.
+
+[[cases]]
+id = "export-notes"
+tags = ["covered", "export"]
+input = "How can I get all my notes out of Acme Notes?"
+expected = { contains = ["Export", "ZIP"] }
+
+[[cases]]
+id = "web-offline"
+tags = ["covered", "offline"]
+input = "Does the web app work without internet?"
+expected = { contains = ["desktop"], matches = '(?i)\b(no|not|needs?)\b' }
+
+[[cases]]
+id = "pro-price"
+tags = ["covered", "plans"]
+input = "How much is Pro and what do I get for it?"
+expected = { contains = ["$8", "version history"] }
+
+[[cases]]
+id = "import-evernote"
+tags = ["not-covered", "import"]
+input = "Can I import my notes from Evernote?"
+expected = { contains = ["support@acme.example"], not_contains = ["Settings > Data > Import"] }
+
+[[cases]]
+id = "dark-mode"
+tags = ["not-covered", "appearance"]
+input = "Is there a dark mode?"
+expected = { contains = ["support@acme.example"] }
+
+[[cases]]
+id = "android-app"
+tags = ["not-covered", "platforms"]
+input = "Is there an Android app?"
+expected = { contains = ["support@acme.example"] }

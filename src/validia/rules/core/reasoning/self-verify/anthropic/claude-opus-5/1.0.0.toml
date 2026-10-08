@@ -1,0 +1,9 @@
+# reasoning/self-verify on claude-opus-5, laid over the default and the anthropic layer.
+
+released = "2026-10-07"
+changes = [
+  "First release: a self-verification line is a warning on Opus 5, where it is documented.",
+]
+
+extend = true
+severity = "warn"

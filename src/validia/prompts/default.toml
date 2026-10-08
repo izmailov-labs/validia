@@ -1,0 +1,96 @@
+# How `validia create` builds a prompt: one question per section, in order, then
+# a closing instruction on how to answer. To change the questions, the checks or
+# the wording, save this file as prompt.toml in your project:
+#
+#   validia template > prompt.toml
+#
+# [[sections]]   one question each. `template` writes the answer, where {answer}
+#                is what was typed. `many = true` asks again until the answer is
+#                empty and writes one `item` per answer under `heading`.
+#                `required = false` lets an empty answer skip the section.
+#                `choices` offers answers as a numbered menu, beside writing one's
+#                own. `answers` limits a section to some answer types.
+#
+# [[hints]]      the core checks, run on every answer as it is typed. `pattern`
+#                fires when it matches; `missing` fires when it does not.
+#                `sections` limits a hint to some sections. A hint never blocks:
+#                it says what to change, and you rewrite the answer or keep it.
+#
+# [output]       the closing instruction for each answer type; the first is the
+#                default. {labels}, {keys} and {tools} are filled in from the
+#                suite. Keep label and json options within what their graders
+#                accept: a label reply must be the label alone.
+
+[[sections]]
+id = "role"
+ask = "Who is the model, and who does it serve?"
+example = "the support assistant for Acme Shop, answering its customers"
+template = "You are {answer}."
+
+[[sections]]
+id = "task"
+ask = "What is its job, starting with a verb?"
+example = "sort incoming support tickets by how soon they need a person"
+template = "Your job is to {answer}."
+
+[[sections]]
+id = "context"
+ask = "What does it need to know to do that well? (empty to skip)"
+example = "Most tickets come from small shops; an outage costs them sales by the hour."
+required = false
+
+[[sections]]
+id = "rules"
+ask = "A rule to follow, with its reason (empty to finish)"
+example = "judge by what is happening, not by tone, because calm customers report outages too"
+many = true
+required = false
+heading = "Keep to these rules:"
+
+[[sections]]
+id = "tone"
+ask = "How should it sound?"
+choices = ["plain and direct", "warm and friendly", "formal and precise"]
+template = "Write in a {answer} way."
+required = false
+answers = ["text"]
+
+[[hints]]
+id = "caps"
+pattern = '\b(MUST|NEVER|ALWAYS|CRITICAL|IMPORTANT|DO NOT)\b'
+message = "capitals add pressure, not meaning: say it plainly, and say why"
+
+[[hints]]
+id = "reason"
+sections = ["rules"]
+missing = '(?i)\b(because|so that|since|otherwise|which means|to avoid)\b'
+message = "give the reason (because ..., so that ...): a rule with its reason covers cases it never names"
+
+[[hints]]
+id = "forbid-only"
+sections = ["rules"]
+pattern = '''(?i)^\s*(do not|don't|never|avoid)\b'''
+message = "say what to do instead: a rule that only forbids leaves the model guessing what is wanted"
+
+[[hints]]
+id = "vague"
+sections = ["task", "rules"]
+pattern = '(?i)\b(be helpful|helpfully|be accurate|high[- ]quality|best possible|as needed|appropriate(ly)?)\b'
+message = "say what that looks like here: words like 'helpful' or 'appropriate' leave the model to guess"
+
+[output]
+label = ["Reply with one word, {labels}, and nothing else."]
+json = [
+  "Reply with one JSON object holding exactly these keys: {keys}. Write nothing else.",
+  "Reply with one JSON object holding exactly these keys: {keys}, inside a ```json fence and nothing else.",
+]
+text = [
+  "Answer in at most three sentences.",
+  "Answer in one short paragraph.",
+  "Answer as a short list of steps.",
+]
+tool = [
+  """Use a tool whenever the answer depends on data you do not have:
+{tools}
+Answer greetings, thanks and small talk directly, without a tool: a tool call there only makes the customer wait.""",
+]

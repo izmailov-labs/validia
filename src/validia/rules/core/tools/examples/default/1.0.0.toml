@@ -1,0 +1,23 @@
+# Whole prompts for tools, as every model sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "tools, before"
+scope = "tool_description"
+fires = ["missing-when-not", "capitals-in-tool", "examples-in-tool"]
+counts = { "capitals-in-tool" = 2 }
+text = '''CRITICAL: ALWAYS use this tool for ANY order question! Example:
+User: where is my order? Assistant: <calls search_orders>'''
+
+[[examples]]
+name = "tools, after"
+scope = "tool_description"
+fires = []
+text = '''Finds a customer's orders by email address or order number and returns at
+most 20, newest first, each with status, items and tracking link. Use it when the
+customer refers to a specific order or asks about a delivery. Refund decisions belong
+to check_refund_eligibility, not this tool. It does not return payment details, and
+it returns an empty list, not an error, when nothing matches.'''

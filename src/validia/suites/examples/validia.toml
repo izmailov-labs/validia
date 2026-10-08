@@ -1,0 +1,45 @@
+# validia settings. Every key is optional; the values shown are the defaults.
+#
+# Precedence, highest first: command-line flags, --set key=value, VALIDIA_*
+# environment variables, .env, this file, [tool.validia] in pyproject.toml,
+# then the defaults. `validia config <key>` shows which one won, and
+# `validia config --discovery` shows every place settings were searched for.
+
+# The model under evaluation, as provider:model. The provider may be left out
+# when the name says it: claude-..., gpt-..., gemini-..., grok-..., deepseek-...
+# model = "anthropic:claude-sonnet-5-5"
+
+[run]
+reps = 1                  # repetitions of every case
+concurrency = 4           # cases in flight at once
+retries = 2               # extra attempts for a rate limit or a dropped connection
+output = ".validia/runs"  # where run results are written
+# fail_under = 90         # exit 1 when the pass rate, in percent, is below this
+
+[lint]
+fail_on = "error"         # lowest severity that fails: "error" or "warning"
+
+[lint.rules]
+# The version of each core rule category: "latest" moves forward with every
+# release; "1" stays on the newest 1.x.y, "1.2" on 1.2.y, "1.2.3" on exactly that.
+# A pin covers the category's default, vendor and model layers alike.
+# `validia rules versions` lists them.
+wording = "latest"
+context = "latest"
+reasoning = "latest"
+output = "latest"
+tools = "latest"
+security = "latest"
+maintenance = "latest"
+
+# How to reach each provider. API keys never go in this file: they are read from
+# the environment when a run calls the model -- ANTHROPIC_API_KEY, OPENAI_API_KEY
+# and the like, or FRANCA_<PROVIDER>_API_KEY -- or from whichever variable
+# `api_key_env` names. `validia run --dry-run` says which one it found.
+# [providers.anthropic]
+# api_key_env = "ANTHROPIC_API_KEY"
+# base_url = "https://gateway.example/v1"  # a proxy or gateway, if you use one
+# timeout_s = 60
+
+# A suite can override any of this: a validia.toml in the suite's own folder
+# outranks this one for that suite.

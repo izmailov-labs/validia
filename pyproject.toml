@@ -1,0 +1,183 @@
+[project]
+name = "validia"
+version = "0.1.0"
+description = "A universal, async-first evaluation framework for LLM systems: prompts, tools, and agents."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "izmailov-labs" }]
+keywords = ["llm", "evaluation", "evals", "prompts", "agents", "benchmarking", "async"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Testing",
+  "Typing :: Typed",
+]
+# Runtime dependencies are inherited by every consumer of this library. There are
+# exactly two, both sibling packages consumed from PyPI. pydantic arrives through
+# franca; do not re-declare it until validia defines models of its own.
+dependencies = [
+  "franca>=0.1.1,<1",
+  "whence>=1.0,<2",
+]
+
+[project.optional-dependencies]
+# Real HTTP for `validia run`. Behind an extra so the offline paths -- lint, check,
+# scripted transports -- never pull an HTTP client into a consumer's environment.
+http = ["franca[http]>=0.1.1,<1"]
+
+[project.scripts]
+validia = "validia.cli:main"
+
+[project.urls]
+Homepage = "https://validia.dev"
+Documentation = "https://validia.dev"
+Repository = "https://github.com/izmailov-labs/validia"
+Changelog = "https://github.com/izmailov-labs/validia/blob/main/CHANGELOG.md"
+Issues = "https://github.com/izmailov-labs/validia/issues"
+
+[build-system]
+requires = ["hatchling>=1.32"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/validia"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/", "tests/", "CHANGELOG.md", "README.md", "LICENSE"]
+
+# PEP 735 dependency groups. These are dev-only and are NOT published to PyPI
+# (unlike [project.optional-dependencies], which consumers would see as extras).
+[dependency-groups]
+dev = [
+  "mypy>=2.3.1",
+  "pre-commit>=4.6.2",
+  "pytest>=9.1.1",
+  "pytest-asyncio>=1.4",
+  "pytest-cov>=7.1",
+  # Ruff has no 1.0 and does not follow semver below it: a minor bump can change
+  # which rules fire. Pinned exactly so lint results only change deliberately.
+  "ruff==0.16.6",
+]
+docs = [
+  "mkdocs-material>=9.7.7",
+  "mkdocstrings[python]>=1.0.6",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+required-version = ">=0.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src"]
+
+[tool.ruff.lint]
+# Explicit select, never the defaults: ruff 0.16 grew its default set from 59 to
+# 413 rules, so relying on defaults means upgrades silently redefine the gate.
+select = [
+  "E", "F", "W",      # pycodestyle + pyflakes
+  "I",                # isort
+  "B",                # bugbear
+  "UP",               # pyupgrade
+  "SIM",              # simplify
+  "C4",               # comprehensions
+  "N",                # pep8-naming
+  "PERF",             # performance
+  "RUF",              # ruff-specific
+  "A",                # builtins
+  "RET",              # return
+  "PT",               # pytest style
+  "TID",              # tidy-imports
+  "PIE",              # misc
+  "ASYNC",            # flake8-async — blocking calls in async def, bad sleeps
+  "D",                # pydocstyle — docstrings are the docs site's source material
+  "S",                # bandit
+  "TC",               # type-checking imports
+  "PTH",              # pathlib over os.path
+  "T20",              # no stray print()
+]
+ignore = [
+  "E501",             # line length is the formatter's job, not the linter's
+  "TID252",           # relative imports are fine inside the package
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "S101",             # assert is the point of a test
+  # Docstrings are the docs site's source material, but tests are not published:
+  # module, class, __init__ and dunder docstrings are noise on a test helper.
+  "D100", "D101", "D103", "D105", "D107",
+  "TID251",           # tests may drive asyncio directly; src/ must inject Clock
+  # A test owns its event loop, so blocking file I/O while arranging a
+  # fixture is not the latency bug these rules exist to catch.
+  "ASYNC230", "ASYNC240",
+]
+# The CLI and its terminal questions are the only places that write to stdout/stderr.
+"src/validia/cli/*.py" = ["T20"]
+# The command line is an application and owns its event loop; this module is the one
+# place it is driven. Everything else in src/ stays loop-neutral.
+"src/validia/cli/_loop.py" = ["TID251"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"asyncio".msg = "inject a Clock (franca.core.clock) instead; src/ stays loop-neutral"
+
+[tool.ruff.lint.flake8-type-checking]
+# pydantic evaluates field annotations at class creation; without this, TC001-TC003
+# move field-type imports behind TYPE_CHECKING and the models fail to build.
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src", "tests"]
+strict = true
+warn_unreachable = true
+enable_error_code = [
+  "redundant-expr",
+  "possibly-undefined",
+  "truthy-bool",
+  "ignore-without-code",
+]
+# Deliberately NOT ignore_missing_imports: franca and whence both ship py.typed,
+# so a missing stub is real signal rather than noise.
+
+[tool.pytest]
+minversion = "9.1"
+# Arrays, not whitespace-separated strings — this is the native pytest 9 table,
+# not the legacy string-typed [tool.pytest.ini_options].
+addopts = ["-ra", "--strict-markers", "--strict-config", "--import-mode=importlib"]
+testpaths = ["tests"]
+# importlib import mode leaves sys.path alone, so the suite exercises the
+# installed package rather than the source tree next to it.
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 90
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+  "@overload",
+]

@@ -1,0 +1,10 @@
+# wording/exclamation-marks, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Repeated exclamation marks"
+pattern = "!!"
+severity = "info"
+confidence = "high"
+fix = "Drop the exclamation marks; plain wording is followed better."

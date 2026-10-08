@@ -1,0 +1,4 @@
+# Cases for output/json-in-prose 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = ["Output ONLY valid JSON.", "Respond only with JSON."]
+quiet = ["Reply with one JSON object holding the keys category and priority."]

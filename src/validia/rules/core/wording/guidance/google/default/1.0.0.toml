@@ -1,0 +1,9 @@
+# How to write wording for google models: what the layers
+# beside it encode as rules, said as instructions.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+summary = "Gemini 3 is documented to over-trigger on emphatic wording."
+instructions = ["State each requirement plainly, with its reason, instead of in capitals."]
+sources = ["Google, Gemini 3 prompting guide"]

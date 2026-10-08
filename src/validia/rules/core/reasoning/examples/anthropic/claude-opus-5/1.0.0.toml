@@ -1,0 +1,10 @@
+# Whole prompts for reasoning, as anthropic/claude-opus-5 sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "Opus 5 before"
+fires = { "self-verify" = "warn", "think-in-prose" = "warn" }
+text = "Think step by step. Before you finish, double-check your answer."

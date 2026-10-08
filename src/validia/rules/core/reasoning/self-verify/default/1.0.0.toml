@@ -1,0 +1,9 @@
+# reasoning/self-verify, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "A self-verification line"
+pattern = "double-check|re-verify|verify (your|the) (answer|work)|before you finish|final verification step|subagent to verify"
+severity = "info"
+fix = "Remove the self-verification line unless an experiment shows it pays for its tokens."

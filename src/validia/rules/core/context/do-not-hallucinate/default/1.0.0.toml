@@ -1,0 +1,8 @@
+# context/do-not-hallucinate, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Forbids hallucinating without saying what to do"
+pattern = "do not hallucinate|don't make (things|anything) up"
+fix = "Say what to do when the answer is unknown: admit it, and where to send the user."

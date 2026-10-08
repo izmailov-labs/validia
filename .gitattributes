@@ -1,0 +1,3 @@
+# Released core rule files are frozen byte for byte (tests/data/released-rules.sha256),
+# so they check out with LF everywhere, including a Windows clone with core.autocrlf.
+src/validia/rules/core/** text eol=lf

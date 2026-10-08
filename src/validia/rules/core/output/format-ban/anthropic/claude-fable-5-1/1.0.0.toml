@@ -1,0 +1,10 @@
+# output/format-ban on claude-fable-5-1, laid over the default and the anthropic layer.
+
+released = "2026-10-07"
+changes = [
+  "First release: a blanket ban on bullets or headers is a warning on Fable 5.1, which already under-formats.",
+]
+
+extend = true
+severity = "warn"
+fix = "Describe the format you want; Fable 5.1 already under-formats, and a ban makes it worse."

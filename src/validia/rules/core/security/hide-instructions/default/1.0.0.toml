@@ -1,0 +1,9 @@
+# security/hide-instructions, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Asks the model to keep its instructions secret"
+pattern = "never (reveal|share|disclose|repeat) (these|your|the|this) (instructions|system prompt|prompt)|keep (this|these|the) (prompt|instructions) (secret|confidential)"
+severity = "info"
+fix = "A request, not a control: keep secrets out of the prompt, and watch outputs for a planted canary (OWASP LLM07)."

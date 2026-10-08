@@ -1,0 +1,8 @@
+# reasoning/plan-first, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Tells the model to plan"
+pattern = "plan before acting|think tool to plan"
+fix = "Remove the planning instruction; current models plan when the task needs it."

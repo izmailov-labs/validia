@@ -1,0 +1,9 @@
+# tools/examples-in-tool, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Examples inside a tool description"
+pattern = 'example:|\be\.g\.|\buser:|\bassistant:|<<\s*eof'
+scope = ["tool_description"]
+fix = "Move examples into the provider's input-examples field."

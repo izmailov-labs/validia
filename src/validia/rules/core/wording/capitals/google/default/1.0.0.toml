@@ -1,0 +1,10 @@
+# wording/capitals on every google model, laid over the default.
+
+released = "2026-10-07"
+changes = [
+  "First release: capitals and '!!' are warnings on Gemini 3, where over-triggering is documented.",
+]
+
+extend = true
+severity = "warn"
+models = ["gemini-3*"]

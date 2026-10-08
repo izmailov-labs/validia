@@ -1,0 +1,13 @@
+# context/bullet-wall, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Behaviour written as a wall of bullets"
+pattern = '^\s*[-*]\s+\S'
+run = 4
+unit = "line"
+severity = "info"
+confidence = "low"
+judge = "list"
+fix = "Write behaviour as prose that carries its reasons; keep lists for steps and reference data."

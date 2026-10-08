@@ -1,0 +1,61 @@
+# An example validia suite for tool calling: a support assistant that has to
+# pick the right tool, with the right arguments, or no tool at all. Check it
+# without calling a model:
+#
+#   validia run $suite_path --model MODEL --dry-run
+#
+# The expected answers live here and the prompt lives in its own file, so the
+# model under test only ever sees prompt.md, the tools and each case's input.
+#
+# Settings for this suite alone -- another model, more reps, another
+# provider -- go in a validia.toml next to this file.
+
+description = "Pick the right support tool and arguments, and skip tools when none is needed."
+prompt = "prompt.md"  # the system prompt under test, relative to this file
+tools = "tools.json"  # the tools the model is offered: name, description, parameters
+
+[grade]
+# The reply must call the expected tool. Arguments a case lists must match
+# exactly; ones it leaves out, such as a free-text search query, may hold
+# anything. `tool = "none"` means the right answer is no tool call at all.
+type = "tool"
+
+# Every tool is needed somewhere, and a third of the cases need no tool: a
+# prompt that calls a tool on every message must not pass. Tags are ordered,
+# and results are grouped by the first.
+
+[[cases]]
+id = "order-status"
+tags = ["lookup_order", "status"]
+input = "Where is my order 48213?"
+expected = { tool = "lookup_order", args = { order_id = "48213" } }
+
+[[cases]]
+id = "order-shipped"
+tags = ["lookup_order", "status"]
+input = "Has order 77120 shipped yet?"
+expected = { tool = "lookup_order", args = { order_id = "77120" } }
+
+[[cases]]
+id = "change-billing-email"
+tags = ["search_help", "how-to"]
+input = "How do I change the email address my invoices go to?"
+expected = { tool = "search_help" }
+
+[[cases]]
+id = "checkout-broken"
+tags = ["create_ticket", "outage"]
+input = "Checkout fails with an error every time I try to pay, so I can't order anything."
+expected = { tool = "create_ticket", args = { priority = "high" } }
+
+[[cases]]
+id = "thanks"
+tags = ["none", "thanks"]
+input = "That's all I needed, thank you!"
+expected = { tool = "none" }
+
+[[cases]]
+id = "greeting"
+tags = ["none", "greeting"]
+input = "Hi there!"
+expected = { tool = "none" }

@@ -1,0 +1,9 @@
+# tools/rules-in-tool, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Behaviour rules inside a tool description"
+pattern = "always recommend|after showing"
+scope = ["tool_description"]
+fix = "Move behaviour rules out of the tool description and into the prompt."

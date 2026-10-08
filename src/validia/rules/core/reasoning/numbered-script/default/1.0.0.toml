@@ -1,0 +1,9 @@
+# reasoning/numbered-script, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "A numbered script for a judgment task"
+pattern = '\bstep \d+\b'
+judge = "method"
+fix = "On a judgment task, state the goal and let the model plan; keep scripts for fixed procedures."

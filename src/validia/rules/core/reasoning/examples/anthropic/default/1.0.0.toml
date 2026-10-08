@@ -1,0 +1,17 @@
+# Whole prompts for reasoning, as anthropic/default sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "show your reasoning on Sonnet 5.5"
+model = "claude-sonnet-5-5"
+fires = { "show-reasoning" = "error" }
+text = "Show your reasoning before the answer."
+
+[[examples]]
+name = "show your reasoning on Haiku 4.5"
+model = "claude-haiku-4-5"
+fires = { "show-reasoning" = "warn" }
+text = "Show your reasoning before the answer."

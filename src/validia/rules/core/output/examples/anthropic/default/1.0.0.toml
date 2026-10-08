@@ -1,0 +1,17 @@
+# Whole prompts for output, as anthropic/default sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "hold findings on Sonnet 5.5"
+model = "claude-sonnet-5-5"
+fires = { "hold-progress" = "warn" }
+text = "Hold all findings until the end of the task."
+
+[[examples]]
+name = "hold findings on Opus 5"
+model = "claude-opus-5"
+fires = { "hold-progress" = "info" }
+text = "Hold all findings until the end of the task."

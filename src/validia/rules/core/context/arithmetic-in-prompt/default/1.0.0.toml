@@ -1,0 +1,9 @@
+# context/arithmetic-in-prompt, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Arithmetic left to the prompt"
+pattern = '\b\d+ points?\b|score of \d+|\bpoints?:'
+judge = "computation"
+fix = "Move the arithmetic into code or data, and test the computed field."

@@ -1,0 +1,8 @@
+# context/repeated-instruction, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Repeats an instruction"
+pattern = '\b(remember,|again,|as stated above)'
+fix = "Say it once, where it applies."

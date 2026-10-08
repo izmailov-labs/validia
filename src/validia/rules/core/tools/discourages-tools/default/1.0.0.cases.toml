@@ -1,0 +1,4 @@
+# Cases for tools/discourages-tools 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = ["Only use tools when strictly necessary.", "Minimize tool calls."]
+quiet = ["Use lookup_order for questions about a specific order."]

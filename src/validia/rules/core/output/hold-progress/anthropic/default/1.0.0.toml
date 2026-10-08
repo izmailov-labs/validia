@@ -1,0 +1,10 @@
+# output/hold-progress on every anthropic model, laid over the default.
+
+released = "2026-10-07"
+changes = [
+  "First release: suppressing narration is a warning on Fable 5.1 and Sonnet 5.5, which narrate progress between tools.",
+]
+
+extend = true
+severity = "warn"
+models = ["claude-fable-5-1", "claude-sonnet-5-5"]

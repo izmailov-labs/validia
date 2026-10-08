@@ -1,0 +1,9 @@
+# maintenance/grading-talk, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Talks about grading"
+pattern = '\bgrade[sd]?\b|\brubric\b|hidden tests?|you will be (scored|evaluated)'
+judge = "grader"
+fix = "Remove talk of grading: it invites the model to game the check instead of doing the task."

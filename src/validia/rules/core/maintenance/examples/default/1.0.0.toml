@@ -1,0 +1,19 @@
+# Whole prompts for maintenance, as every model sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "maintenance, before"
+fires = ["grading-talk", "expired-date", "old-model-name", "change-history"]
+text = '''You will be graded on accuracy by hidden tests.
+NOTE: claude-3 ignored the tone rule, so it is repeated below.
+As of 2025-03, refunds now work differently: damaged items also count.
+(harness, every 3rd turn) Reminder: be polite.'''
+
+[[examples]]
+name = "maintenance, after"
+fires = []
+text = '''Every fact about an order must come from the order record.
+Damaged, late and missing items are all eligible for a refund.'''

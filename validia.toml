@@ -1,0 +1,17 @@
+# validia settings. Every key is optional; the values shown are the defaults.
+#
+# Precedence, highest first: command-line flags, --set key=value, VALIDIA_*
+# environment variables, .env, this file, [tool.validia] in pyproject.toml,
+# then the defaults. `validia config <key>` shows which one won, and
+# `validia config --discovery` shows every place settings were searched for.
+
+# The model under evaluation, as a franca model id.
+# model = ""
+
+[run]
+reps = 1                  # repetitions of every case
+concurrency = 4           # cases in flight at once
+output = ".validia/runs"  # where run results are written
+
+[lint]
+fail_on = "error"         # lowest severity that fails: "error" or "warning"

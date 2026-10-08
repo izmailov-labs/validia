@@ -1,0 +1,73 @@
+# An example validia suite: the prompt under test, the cases to run it on, and
+# how to grade them. Check it without calling a model:
+#
+#   validia run $suite_path --model MODEL --dry-run
+#
+# The expected answers live here and the prompt lives in its own file, so the
+# model under test only ever sees prompt.md and each case's input.
+#
+# Settings for this suite alone -- another model, more reps, another
+# provider -- go in a validia.toml next to this file.
+
+description = "Sort incoming support tickets into urgent and normal."
+prompt = "prompt.md"  # the system prompt under test, relative to this file
+
+[grade]
+# A check in code, not a judge: the reply must be exactly the expected label,
+# ignoring case, surrounding spaces, and quotes or a full stop around it.
+type = "label"
+labels = ["urgent", "normal"]
+
+# The set is balanced: as many normal cases as urgent ones, so a prompt that
+# answers "urgent" every time scores 50%, not 100%. Two cases are tagged
+# misleading-tone: the writer's tone points at the wrong answer, which is the
+# mistake this prompt is most likely to make. Tags are ordered, and results are
+# grouped by the first.
+
+[[cases]]
+id = "outage-login"
+tags = ["urgent", "outage"]
+input = "Nobody on our team has been able to log in since 9am. We have a client demo at noon."
+expected = "urgent"
+
+[[cases]]
+id = "data-loss-invoices"
+tags = ["urgent", "data-loss"]
+input = "After this morning's update, every invoice from March is gone from our account."
+expected = "urgent"
+
+[[cases]]
+id = "security-unknown-login"
+tags = ["urgent", "security"]
+input = "My account shows logins from a country I have never been to, and my password was changed."
+expected = "urgent"
+
+[[cases]]
+id = "calm-checkout-outage"
+tags = ["urgent", "misleading-tone"]
+input = "Hi! No rush at all, but checkout has been failing for every one of our customers since last night. Thanks so much!"
+expected = "urgent"
+
+[[cases]]
+id = "how-to-export"
+tags = ["normal", "how-to"]
+input = "How do I export my contacts to a CSV file?"
+expected = "normal"
+
+[[cases]]
+id = "billing-next-invoice"
+tags = ["normal", "billing"]
+input = "Could you tell me when my next invoice will be issued?"
+expected = "normal"
+
+[[cases]]
+id = "pricing-typo"
+tags = ["normal", "cosmetic"]
+input = "There is a typo on your pricing page: 'anual' should be 'annual'."
+expected = "normal"
+
+[[cases]]
+id = "angry-feature-request"
+tags = ["normal", "misleading-tone"]
+input = "This is RIDICULOUS. Why is there STILL no dark mode?? I have asked three times!!!"
+expected = "normal"

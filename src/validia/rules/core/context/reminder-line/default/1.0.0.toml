@@ -1,0 +1,8 @@
+# context/reminder-line, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "A reminder line"
+pattern = '\breminder:'
+fix = "State it once; a repeated reminder is noise the model learns to skip."

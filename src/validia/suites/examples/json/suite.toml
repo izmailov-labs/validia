@@ -1,0 +1,61 @@
+# An example validia suite for JSON answers: pulling fields out of a support
+# ticket. Check it without calling a model:
+#
+#   validia run $suite_path --model MODEL --dry-run
+#
+# The expected answers live here and the prompt lives in its own file, so the
+# model under test only ever sees prompt.md and each case's input.
+#
+# Settings for this suite alone -- another model, more reps, another
+# provider -- go in a validia.toml next to this file.
+
+description = "Extract category, priority and product from a support ticket as JSON."
+prompt = "prompt.md"  # the system prompt under test, relative to this file
+
+[grade]
+# The reply must be one JSON object (a ```json fence around it is allowed)
+# holding every `required` key. Each case's `expected` lists the fields that
+# must match exactly; fields it leaves out may hold anything.
+type = "json"
+required = ["category", "priority", "product"]
+
+# Every category appears, priorities are mixed, and one ticket never says which
+# product it is about: the right answer there is "unknown", which catches a
+# prompt that makes a field up rather than admit it does not know. Tags are
+# ordered, and results are grouped by the first.
+
+[[cases]]
+id = "mobile-crash"
+tags = ["bug", "high"]
+input = "Since yesterday's update the iOS app crashes as soon as I open it. I can't see my orders at all."
+expected = { category = "bug", priority = "high", product = "mobile" }
+
+[[cases]]
+id = "chart-labels"
+tags = ["bug", "low"]
+input = "On the web dashboard the revenue chart shows last month's labels, though the numbers look right."
+expected = { category = "bug", priority = "low", product = "web" }
+
+[[cases]]
+id = "double-charge"
+tags = ["billing", "high"]
+input = "I was charged twice for September. Please refund one of the payments."
+expected = { category = "billing", priority = "high", product = "unknown" }
+
+[[cases]]
+id = "reset-email-missing"
+tags = ["account", "high"]
+input = "The password reset email never arrives, so I'm locked out of the website."
+expected = { category = "account", priority = "high", product = "web" }
+
+[[cases]]
+id = "api-rate-limit"
+tags = ["how-to", "low"]
+input = "What is the rate limit on the REST API, and how do I ask for a higher one?"
+expected = { category = "how-to", priority = "low", product = "api" }
+
+[[cases]]
+id = "add-teammate"
+tags = ["how-to", "low"]
+input = "How do I add a teammate to my workspace from the mobile app?"
+expected = { category = "how-to", priority = "low", product = "mobile" }

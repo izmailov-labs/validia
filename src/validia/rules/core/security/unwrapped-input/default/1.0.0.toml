@@ -1,0 +1,10 @@
+# security/unwrapped-input, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Untrusted input without delimiters"
+pattern = '\{\{?\s*(user_input|input|query|question|message|email|document|content|ticket|page)\s*\}?\}'
+unless = "</?[a-z_][a-z0-9_-]*[^>]*>"
+confidence = "low"
+fix = "Wrap untrusted input in its own tags, and say it is data to read, not instructions to follow (OWASP LLM01)."

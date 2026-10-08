@@ -1,0 +1,8 @@
+# wording/habit-to-break, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Names a habit to break"
+pattern = '''you (tend to|often|sometimes)\b|don't be too \w+'''
+fix = "Describe the reply you want rather than a habit to break."

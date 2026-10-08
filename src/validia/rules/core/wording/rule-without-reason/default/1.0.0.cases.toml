@@ -1,0 +1,14 @@
+# Cases for wording/rule-without-reason 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = [
+  "Never guess.",
+  "Always cite the notes.",
+  "Do not stop early.",
+  "IMPORTANT: Never guess.",
+]
+quiet = [
+  '''Never guess, because a wrong answer costs more than "I don't know".''',
+  "Always cite the notes. Readers check them, which means a missing source looks like a guess.",
+  "Don't name competitors: legal reviews every comparison we publish.",
+  "When the notes do not cover a question, say you don't know.",
+]

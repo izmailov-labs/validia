@@ -1,0 +1,15 @@
+# How to write tools for openai models: what the layers
+# beside it encode as rules, said as instructions.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+summary = "For OpenAI reasoning models, examples inside tool descriptions may hurt tool selection."
+instructions = [
+  "Leave examples out of tool descriptions; describe what the tool does, returns, and when not to use it.",
+]
+sources = [
+  "Claude API docs: Define tools",
+  "OpenAI, Function calling guide",
+  "Anthropic skills repository, prompt-audit guide",
+]

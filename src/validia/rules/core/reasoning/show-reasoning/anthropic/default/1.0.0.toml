@@ -1,0 +1,16 @@
+# reasoning/show-reasoning on every anthropic model, laid over the default.
+
+released = "2026-10-07"
+changes = [
+  "First release: asking to see the model's reasoning is an error on the five models whose safeguards refuse it.",
+]
+
+extend = true
+severity = "error"
+models = [
+  "claude-fable-5",
+  "claude-fable-5-1",
+  "claude-opus-5",
+  "claude-opus-5-5",
+  "claude-sonnet-5-5",
+]

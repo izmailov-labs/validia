@@ -1,0 +1,8 @@
+# output/json-in-prose, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Asks for JSON in prose"
+pattern = "output only valid json|respond only (in|with) json"
+fix = "Use structured outputs or a strict tool for JSON, not a request in prose."

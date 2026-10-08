@@ -1,0 +1,17 @@
+# Whole prompts for wording, as openai/default sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "capitals on GPT-5"
+model = "gpt-5"
+fires = { "capitals" = "warn" }
+text = "You MUST cite the order record, because customers check it."
+
+[[examples]]
+name = "capitals on GPT-5.2"
+model = "gpt-5.2"
+fires = { "capitals" = "info" }
+text = "You MUST cite the order record, because customers check it."

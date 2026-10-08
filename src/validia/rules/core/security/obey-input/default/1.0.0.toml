@@ -1,0 +1,8 @@
+# security/obey-input, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Tells the model to obey the input"
+pattern = "follow (the |any )?instructions (in|from|inside) (the |this |that )?(email|document|message|page|file|content|website|ticket)|do what the (email|document|message|page) (says|asks)"
+fix = "Treat content as data: a model that obeys a document can be steered by whoever wrote it (OWASP LLM01)."

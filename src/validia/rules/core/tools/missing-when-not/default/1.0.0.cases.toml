@@ -1,0 +1,7 @@
+# Cases for tools/missing-when-not 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = ["Look up one order."]
+quiet = [
+  "Look up one order by its number. Do not use it for refund questions; use search_help.",
+  "Refund decisions belong to check_refund_eligibility, not this tool.",
+]

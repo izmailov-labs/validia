@@ -1,0 +1,9 @@
+# wording/default-when-unsure, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Makes a tool the default when in doubt"
+pattern = 'if in doubt, use|\bdefault to\b'
+severity = "info"
+fix = "Say when the tool or behaviour applies, instead of making it the default for doubt."

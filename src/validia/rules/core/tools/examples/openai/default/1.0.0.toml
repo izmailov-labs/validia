@@ -1,0 +1,12 @@
+# Whole prompts for tools, as openai/default sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "an example in a description, on GPT-5"
+model = "gpt-5"
+scope = "tool_description"
+fires = { "examples-in-tool" = "warn" }
+text = "Look up an order by its number, e.g. A-10234. Do not use it for refunds; use check_refund instead."

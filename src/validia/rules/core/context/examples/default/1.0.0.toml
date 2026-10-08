@@ -1,0 +1,57 @@
+# Whole prompts for context, as every model sees them: each names exactly the rules that
+# must fire on it, and how severe each must be when it says so.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "layout, before"
+fires = ["bullet-wall", "restated-default"]
+text = '''What is our refund window for damaged items?
+Policy: Refunds are accepted within 30 days... Shipping: Damaged items must be reported...
+Here is an example of a perfect reply:
+"Hi Sam! So sorry about that. You can get a refund within 30 days. Cheers, Ana"
+- Be empathetic
+- Be concise
+- Check the policy
+- Escalate if the customer is angry'''
+
+[[examples]]
+name = "layout, after"
+fires = []
+text = '''<documents>
+  <document source="refund-policy.md" updated="2026-08-12">...</document>
+  <document source="shipping-policy.md" updated="2026-07-30">...</document>
+</documents>
+
+When a customer is upset, acknowledge the problem before the policy, because a reply
+that opens with rules reads as a refusal. Hand the conversation to a person when the
+customer asks for one, or when the policy does not cover their case.
+
+<examples note="illustrative; vary length and tone to fit the customer">
+  <example>...</example>
+  <example>...</example>
+</examples>
+
+<question>What is our refund window for damaged items?</question>'''
+
+[[examples]]
+name = "content, before"
+fires = ["identity-stub", "restated-default", "do-not-hallucinate", "arithmetic-in-prompt", "special-cases"]
+text = '''You are a helpful assistant. Be accurate, helpful and clear. Do not hallucinate.
+Refund points: late delivery = 2, damaged item = 3, missing item = 4. Refund if total > 4.
+If the user is from Germany, mention the 14-day withdrawal right.
+If the user mentions a gift, ask for the order number first.'''
+
+[[examples]]
+name = "content, after"
+fires = []
+text = '''You answer customer emails for Northwind, an online homeware shop. Customers are
+non-technical and often upset; a good reply resolves the issue in one message, or says
+exactly what happens next and when.
+
+If the order record or the policy documents don't answer a question, say so and offer
+to hand over to a person; a wrong promise costs more than an escalation.
+
+Use check_refund_eligibility for refund decisions; it applies the scoring and regional
+rules, so explain its result rather than recomputing it.'''
