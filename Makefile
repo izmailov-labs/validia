@@ -12,7 +12,7 @@ fmt:  ## Autofix and format
 	uv run ruff check --fix .
 	uv run ruff format .
 
-typecheck:  ## Strict type check (src and tests)
+typecheck:  ## Strict type check (src, tests and the docs hook)
 	uv run mypy
 
 test:  ## Run the test suite

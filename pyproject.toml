@@ -144,7 +144,7 @@ quote-style = "double"
 
 [tool.mypy]
 python_version = "3.12"
-files = ["src", "tests"]
+files = ["src", "tests", "docs/_hooks"]
 strict = true
 warn_unreachable = true
 enable_error_code = [
