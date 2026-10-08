@@ -20,4 +20,44 @@
          <loc>https://validia.dev/rules/</loc>
          <lastmod>2026-10-08</lastmod>
     </url>
+    <url>
+         <loc>https://validia.dev/rules/custom/</loc>
+         <lastmod>2026-10-08</lastmod>
+    </url>
+    <url>
+         <loc>https://validia.dev/rules/default/</loc>
+         <lastmod>2026-10-08</lastmod>
+    </url>
+    <url>
+         <loc>https://validia.dev/rules/releases/</loc>
+         <lastmod>2026-10-08</lastmod>
+    </url>
+    <url>
+         <loc>https://validia.dev/rules/anthropic/</loc>
+         <lastmod>2026-10-08</lastmod>
+    </url>
+    <url>
+         <loc>https://validia.dev/rules/anthropic/claude-fable-5-1/</loc>
+         <lastmod>2026-10-08</lastmod>
+    </url>
+    <url>
+         <loc>https://validia.dev/rules/anthropic/claude-opus-5-5/</loc>
+         <lastmod>2026-10-08</lastmod>
+    </url>
+    <url>
+         <loc>https://validia.dev/rules/anthropic/claude-opus-5/</loc>
+         <lastmod>2026-10-08</lastmod>
+    </url>
+    <url>
+         <loc>https://validia.dev/rules/anthropic/claude-sonnet-5-5/</loc>
+         <lastmod>2026-10-08</lastmod>
+    </url>
+    <url>
+         <loc>https://validia.dev/rules/google/</loc>
+         <lastmod>2026-10-08</lastmod>
+    </url>
+    <url>
+         <loc>https://validia.dev/rules/openai/</loc>
+         <lastmod>2026-10-08</lastmod>
+    </url>
 </urlset>
