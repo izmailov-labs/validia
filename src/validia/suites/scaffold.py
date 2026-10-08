@@ -81,7 +81,9 @@ def folder_problem(text: str) -> str | None:
         The problem, or ``None``.
     """
     path = Path(text)
-    if path.is_absolute() or ".." in path.parts:
+    # The anchor, not is_absolute(): on Windows "/etc" has a root but no drive,
+    # so it is not absolute, yet it still starts outside the project.
+    if path.anchor or ".." in path.parts:
         return "use a folder inside the project, as in evals"
     return None
 

@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -41,11 +42,13 @@ def _render(config: Config, keys: Iterable[str], base: Path | None = None) -> st
     """
     values = config.dump()
     origins = config.origins()
-    prefix = "" if base is None else f"{base}{os.sep}"
 
     def where(key: str) -> str:
-        origin = str(origins[key])
-        return origin[len(prefix) :] if prefix and origin.startswith(prefix) else origin
+        origin = origins[key]
+        locator = Path(origin.locator)
+        if base is not None and locator.is_relative_to(base):
+            origin = replace(origin, locator=locator.relative_to(base).as_posix())
+        return str(origin)
 
     rows = [
         (f"{key} = {values[key]!r}", f"<- {where(key)}") if key in values else (key, "- not set")
