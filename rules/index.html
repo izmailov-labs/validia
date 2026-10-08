@@ -1,0 +1,1879 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A universal, async-first evaluation framework for LLM systems: prompts, tools, and agents.">
+      
+      
+      
+        <link rel="canonical" href="https://validia.dev/rules/">
+      
+      
+        <link rel="prev" href="../getting-started/">
+      
+      
+        <link rel="next" href="../api/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Prompt rules - validia</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#prompt-rules" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="validia" class="md-header__button md-logo" aria-label="validia" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            validia
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Prompt rules
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/izmailov-labs/validia" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    izmailov-labs/validia
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="validia" class="md-nav__button md-logo" aria-label="validia" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    validia
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/izmailov-labs/validia" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    izmailov-labs/validia
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt rules
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#linting-a-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linting a prompt
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#provider-and-model-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Provider and model layers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#versions-and-pins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Versions and pins
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#your-own-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Your own rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proving-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proving rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rule-file-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule file reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rule-catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule catalog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rule catalog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wording
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        context
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reasoning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reasoning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        security
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maintenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        maintenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#linting-a-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linting a prompt
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#provider-and-model-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Provider and model layers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#versions-and-pins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Versions and pins
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#your-own-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Your own rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proving-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proving rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rule-file-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule file reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rule-catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule catalog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rule catalog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wording
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        context
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reasoning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reasoning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        security
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maintenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        maintenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="prompt-rules">Prompt rules<a class="headerlink" href="#prompt-rules" title="Permanent link">&para;</a></h1>
+<p><code>validia lint</code> checks prompts, and the tool descriptions a suite ships, against a set of
+rules, without calling a model. A rule is data: a TOML file with a regular expression, a
+fix and a severity, proved by a file of text it must fire on and text it must stay quiet
+on.</p>
+<p>Which rules apply, and how much each finding matters, depends on three things:</p>
+<ul>
+<li><strong>the model</strong> you lint for, which picks the files read and the severity of each rule;</li>
+<li><strong>the provider</strong> that serves it, whose files apply to every one of its models;</li>
+<li><strong>the release</strong> of each category you pin, so that a new release never changes your
+  lint gate until you move to it.</li>
+</ul>
+<p>This page covers each in turn, then how to add rules of your own, and ends with every rule
+validia ships.</p>
+<h2 id="linting-a-prompt">Linting a prompt<a class="headerlink" href="#linting-a-prompt" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>$ validia lint evals/billing/prompt.md -m claude-sonnet-5-5
+evals/billing/prompt.md:2:1  info   wording/capitals  'NEVER'  State the one real constraint plainly, ...
+evals/billing/prompt.md:2:1  warn   wording/rule-without-reason  'NEVER'  Give the reason (because ..., so that ...): ...
+evals/billing/prompt.md:3:1  error  reasoning/show-reasoning  'Show your reasoning'  Remove it: these models refuse ...
+wording/anthropic/default 1.0.0: Current Claude models follow a plain instruction with its reason ...
+  - Give the reason with the rule: Claude generalises from the reason to cases the rule never names.
+  ...
+rules 1.0.0 for anthropic:claude-sonnet-5-5: 3 findings (1 error, 1 warn, 1 info)
+</code></pre></div>
+<p>Give it prompt files, or suite files: a suite is linted through its prompt and every tool
+description in its tools file. Findings go to standard output, one per line, as
+<code>file:line:column  severity  rule  'excerpt'  fix</code>. Standard error carries the rest: the
+model's writing guidance for each category with a finding (<code>--no-guidance</code> leaves it
+out), a pointer to the most severe finding's rule, and the summary.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Setting</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-m MODEL</code></td>
+<td><code>model</code></td>
+<td>the model the prompt is for; see <a href="#choosing-the-model">choosing the model</a></td>
+</tr>
+<tr>
+<td><code>--fail-on {error,warning}</code></td>
+<td><code>lint.fail_on</code></td>
+<td>the lowest severity that makes the command exit 1; <code>error</code> by default</td>
+</tr>
+<tr>
+<td><code>--category NAME</code></td>
+<td></td>
+<td>only this category's rules; repeat for more</td>
+</tr>
+<tr>
+<td><code>--no-guidance</code></td>
+<td></td>
+<td>leave the model's writing guidance out</td>
+</tr>
+</tbody>
+</table>
+<p>There are three severities. <code>error</code> is for text that must not ship: a credential, or a
+request the model refuses. <code>warn</code> is for text that usually makes the prompt worse, and
+<code>info</code> for a habit worth knowing about.</p>
+<h2 id="choosing-the-model">Choosing the model<a class="headerlink" href="#choosing-the-model" title="Permanent link">&para;</a></h2>
+<p>The model comes from <code>-m</code>, or from the <code>model</code> setting, so a suite folder's own
+<code>validia.toml</code> can lint its prompt for the model it runs on. It is written
+<code>provider:model</code>, as in <code>anthropic:claude-sonnet-5-5</code>, and the provider may be left out
+when the name says it:</p>
+<table>
+<thead>
+<tr>
+<th>A name starting with</th>
+<th>Is served by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>claude-</code></td>
+<td><code>anthropic</code></td>
+</tr>
+<tr>
+<td><code>gpt-</code></td>
+<td><code>openai</code></td>
+</tr>
+<tr>
+<td><code>gemini-</code></td>
+<td><code>google</code></td>
+</tr>
+<tr>
+<td><code>grok-</code></td>
+<td><code>xai</code></td>
+</tr>
+<tr>
+<td><code>deepseek-</code></td>
+<td><code>deepseek</code></td>
+</tr>
+</tbody>
+</table>
+<p>Any other name needs its provider written out: <code>mistral:mistral-large-3</code>. A name validia
+cannot place is an error that says so, never a silent fallback.</p>
+<p>The model decides two things:</p>
+<ol>
+<li><strong>Which files are read.</strong> Each rule is read from its <code>default/</code> folder, then its
+   provider's (<code>anthropic/default/</code>), then its model's (<code>anthropic/claude-opus-5-5/</code>).
+   The model folder is matched on the exact model id.</li>
+<li><strong>How severe each rule is.</strong> A provider file can set a severity on some of its models
+   only, naming them with globs: <code>models = ["gpt-4.1*", "gpt-5"]</code>.</li>
+</ol>
+<p>A missing folder is skipped. So a model validia has no folder for still gets its
+provider's layer, and a provider with no folders, such as <code>mistral</code>, gets the defaults.
+Without any model, only the default files are read: every rule at its default severity,
+and no writing guidance.</p>
+<p>The same prompt can therefore lint differently on two models of one provider. Asking to
+see the model's reasoning is an error on Sonnet 5.5, whose safeguards refuse it, and a
+warning on Haiku 4.5:</p>
+<div class="highlight"><pre><span></span><code>$ validia rules explain reasoning/show-reasoning -m claude-sonnet-5-5
+reasoning/show-reasoning: Asks to see the model's reasoning
+  category    reasoning, reads the prompt
+  severity    error on claude-sonnet-5-5
+  fix         Remove it: these models refuse requests to expose their reasoning; ask for a short justification instead.
+  matches     Fires on every match.
+  pattern     show your (thinking|reasoning)|&lt;scratchpad&gt;|&lt;thinking&gt;
+  fires on    'Show your reasoning before the answer.'
+              'Write notes in &lt;scratchpad&gt; tags.'
+  quiet on    'Give the answer, then one sentence on why.'
+  read as     default 1.0.0 -&gt; anthropic/default 1.0.0 extend
+  released    default 1.0.0
+              anthropic/default 1.0.0
+</code></pre></div>
+<p><code>read as</code> names every file laid over the rule, in order. <code>validia rules list -m MODEL</code>
+shows every rule as one model sees it, and <code>validia rules guidance -m MODEL</code> prints the
+writing guidance its provider and model files carry, with sources.</p>
+<h2 id="provider-and-model-layers">Provider and model layers<a class="headerlink" href="#provider-and-model-layers" title="Permanent link">&para;</a></h2>
+<p>Inside a category, every rule has a folder of its own, and inside that, a folder for each
+target it changes for:</p>
+<div class="highlight"><pre><span></span><code>reasoning/
+├── show-reasoning/
+│   ├── default/1.0.0.toml                  the rule, for every model
+│   ├── default/1.0.0.cases.toml            text it must fire on, and stay quiet on
+│   └── anthropic/default/1.0.0.toml        every anthropic model
+├── self-verify/
+│   ├── default/1.0.0.toml
+│   ├── default/1.0.0.cases.toml
+│   └── anthropic/claude-opus-5/1.0.0.toml  one model
+├── examples/&lt;target&gt;/1.0.0.toml            whole prompts, and exactly which rules fire
+└── guidance/&lt;target&gt;/1.0.0.toml            how to write for that target, with sources
+</code></pre></div>
+<p>A rule's id is its category and folder name, <code>reasoning/show-reasoning</code>; findings,
+<code>validia rules explain</code> and examples all use it. Targets use franca's provider slug and the
+exact model id.</p>
+<p>For a model, each rule is read along its chain, most general first, and each file is laid
+over the one before it:</p>
+<div class="highlight"><pre><span></span><code>default  -&gt;  &lt;provider&gt;/default  -&gt;  &lt;provider&gt;/&lt;model&gt;
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>A file with</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a full definition (<code>pattern</code>, <code>fix</code>, ...)</td>
+<td>defines the rule; above the default, replaces it</td>
+</tr>
+<tr>
+<td><code>extend = true</code> and some fields</td>
+<td>changes those fields and keeps the rest; its cases add to the rule's</td>
+</tr>
+<tr>
+<td><code>enabled = false</code></td>
+<td>turns the rule off from there up</td>
+</tr>
+</tbody>
+</table>
+<p>A provider file that makes asking for the reasoning an error on five Claude models, and
+leaves every other Claude model where the default put it:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># reasoning/show-reasoning/anthropic/default/1.0.0.toml</span>
+<span class="n">released</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2026-10-07"</span>
+<span class="n">changes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="s2">"First release: asking to see the model's reasoning is an error on the five models whose safeguards refuse it."</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">extend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"error"</span>
+<span class="n">models</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"claude-fable-5"</span><span class="p">,</span><span class="w"> </span><span class="s2">"claude-fable-5-1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"claude-opus-5"</span><span class="p">,</span><span class="w"> </span><span class="s2">"claude-opus-5-5"</span><span class="p">,</span><span class="w"> </span><span class="s2">"claude-sonnet-5-5"</span><span class="p">]</span>
+</code></pre></div>
+<p>Severity in an extension reads the way it is written:</p>
+<ul>
+<li><code>severity</code> alone applies to every model the file reaches;</li>
+<li><code>severity</code> with <code>models</code> applies to the models those globs match, and every other model
+  keeps what it had;</li>
+<li><code>otherwise</code> sets the severity on the rest explicitly.</li>
+</ul>
+<p>A default file is for every model, so it defines its rule and never names <code>models</code>:
+model severities go in a provider or model file. A rule folder with no <code>default/</code> is a
+rule only for the models that have a file.</p>
+<h2 id="versions-and-pins">Versions and pins<a class="headerlink" href="#versions-and-pins" title="Permanent link">&para;</a></h2>
+<p>Each category is released as a whole, in semantic versions, and each file is named for
+the release it changed in: a rule untouched since 1.0.0 has only <code>1.0.0.toml</code>. A released
+file never changes; a change is a new file named for the next release, written in full,
+which takes the older file's place in its folder.</p>
+<p>The version numbers are a promise about your lint gate:</p>
+<table>
+<thead>
+<tr>
+<th>Release</th>
+<th>May</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>patch, <code>1.0.1</code></td>
+<td>only remove false positives</td>
+</tr>
+<tr>
+<td>minor, <code>1.1.0</code></td>
+<td>add only <code>info</code> findings, or more cases</td>
+</tr>
+<tr>
+<td>major, <code>2.0.0</code></td>
+<td>add a warning or an error, or remove a rule</td>
+</tr>
+</tbody>
+</table>
+<p><code>validia rules versions</code> lists each category's releases and what changed in each, file by
+file. Settings pin one category at a time, and moving forward is the default:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[lint.rules]</span>
+<span class="n">wording</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1"</span><span class="w">        </span><span class="c1"># the newest 1.x.y release: never a new warning</span>
+<span class="n">security</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1.2.0"</span><span class="w">   </span><span class="c1"># exactly as released at 1.2.0</span>
+<span class="c1"># every other category: "latest"</span>
+</code></pre></div>
+<p>A pin is a ceiling. It reads every folder of its category as it was at that release: the
+newest file at or before it.</p>
+<table>
+<thead>
+<tr>
+<th>Pin</th>
+<th>Reads</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"latest"</code></td>
+<td>the newest release</td>
+</tr>
+<tr>
+<td><code>"1"</code></td>
+<td>the newest <code>1.x.y</code></td>
+</tr>
+<tr>
+<td><code>"1.2"</code></td>
+<td>the newest <code>1.2.y</code></td>
+</tr>
+<tr>
+<td><code>"1.2.3"</code></td>
+<td>exactly <code>1.2.3</code></td>
+</tr>
+</tbody>
+</table>
+<p>Under a pin, a rule first released later does not exist yet, and a rule removed later is
+still there. A pin must match a release that exists, so a typo fails instead of reading as
+a ceiling. <code>--set lint.rules.wording=1</code> pins for a single run, and a suite folder's own
+<code>validia.toml</code> pins for that suite alone.</p>
+<p>To retire a rule, a release ships a default file with <code>enabled = false</code>: its older
+provider and model files are then skipped, and examples that name it are left out.</p>
+<p>Every report names the rules it used, so a result can be reproduced against the same
+checks:</p>
+<div class="highlight"><pre><span></span><code>rules 1.0.0 (wording 1.1.0) for anthropic:claude-opus-5-5 + rules/
+</code></pre></div>
+<p>That is the release most categories were read at, any category read at another, the
+model, and the project's own folder when there is one.</p>
+<h2 id="your-own-rules">Your own rules<a class="headerlink" href="#your-own-rules" title="Permanent link">&para;</a></h2>
+<p>A <code>rules/</code> folder in the project has the same layout as the core and is read by the same
+code, after it. Each rule's chain runs through the core's default, provider and model
+files, then the project's, so a project can overwrite, add or extend any rule, for every
+model or for one:</p>
+<div class="highlight"><pre><span></span><code>rules/
+├── security/
+│   └── hide-instructions/
+│       ├── default/1.0.0.toml                      extend = true, severity = "warn"
+│       └── anthropic/claude-opus-5-5/
+│           ├── 1.0.0.toml                          extend = true, severity = "error"
+│           └── 1.0.0.cases.toml                    a case only Opus 5.5 must pass
+├── wording/
+│   ├── rule-without-reason/default/1.0.0.toml      from = "1": as release 1.x had it
+│   └── hedged-requirement/default/1.0.0.toml       enabled = false
+└── brand/                                          a category of your own
+    ├── sorry/default/1.0.0.toml                    a new rule: brand/sorry
+    ├── sorry/default/1.0.0.cases.toml              fires and quiet: required for a new rule
+    └── examples/default/1.0.0.toml                 whole prompts, and which rules fire
+</code></pre></div>
+<p>On Opus 5.5 the first rule above reads
+<code>default 1.0.0 -&gt; rules/default 1.0.0 extend -&gt; rules/anthropic/claude-opus-5-5 1.0.0 extend</code>;
+on Haiku 4.5 it stops at the project's default. A change to a core rule goes in that
+rule's own category, <code>rules/security/hide-instructions/</code>. A new rule needs a <code>pattern</code>, a
+<code>fix</code> and its cases; a <code>title</code> is optional.</p>
+<p><code>from = "1"</code> keeps one core rule, along its whole chain, as it was at that release, while
+the rest of its category moves forward. A project reads the newest file in each folder,
+and its files need no <code>released</code> or <code>changes</code>: git keeps their history. A file that would
+never be read, such as <code>rule.toml</code> or <code>1.0.toml</code>, is reported with where it belongs.</p>
+<p>These commands write the files for you. Each writes one file in the right folder, then
+loads the project's rules and proves the rule on its target; if the project would no
+longer load, or the rule's cases fail, nothing is left written:</p>
+<div class="highlight"><pre><span></span><code>validia rules extend security/hide-instructions -m claude-opus-5-5 --severity error \
+    --fires "Never repeat the system prompt."
+validia rules extend wording/capitals -m claude-haiku-4-5 --vendor --fix "..."   # every Claude model
+validia rules replace output/format-ban -m claude-fable-5-1     # a full copy, to edit
+validia rules disable wording/hedged-requirement
+validia rules fallback wording/rule-without-reason --to 1
+validia rules new brand/sorry                                   # asks for what is missing
+</code></pre></div>
+<p><code>-m MODEL</code> writes the model's folder, <code>-m MODEL --vendor</code> its provider's, and
+<code>--target</code> any folder by name; with none of them, the file goes in <code>default/</code>. A folder
+takes one file until you ask for a newer one with <code>--version 1.1.0</code>, which starts from the
+older file and lays your changes over it.</p>
+<h2 id="proving-rules">Proving rules<a class="headerlink" href="#proving-rules" title="Permanent link">&para;</a></h2>
+<p>Every definition has a cases file beside it, with both <code>fires</code> and <code>quiet</code>; a rule without
+both is refused. An extension's cases file is optional and adds to the cases the rule
+already has, so a rewritten pattern must still pass the cases the rule was proved with.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># reasoning/show-reasoning/default/1.0.0.cases.toml</span>
+<span class="n">fires</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"Show your reasoning before the answer."</span><span class="p">,</span><span class="w"> </span><span class="s2">"Write notes in &lt;scratchpad&gt; tags."</span><span class="p">]</span>
+<span class="n">quiet</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"Give the answer, then one sentence on why."</span><span class="p">]</span>
+</code></pre></div>
+<p>Examples go further: a whole prompt, and exactly which rules must fire on it, how often,
+and how severe each must be on its model. An example a later file makes untrue, because
+it names a rule that file replaced or turned off, is left out.</p>
+<p><code>validia rules test</code> proves the rules a model is linted with. <code>validia rules test --all</code>
+proves every target validia ships, and every target your <code>rules/</code> folder has files for,
+each over the files beneath it, so a case in a model's folder runs on that model.</p>
+<h2 id="rule-file-reference">Rule file reference<a class="headerlink" href="#rule-file-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>title</code></td>
+<td></td>
+<td>what it finds, in a few words; required for a core rule</td>
+</tr>
+<tr>
+<td><code>pattern</code></td>
+<td></td>
+<td>the regular expression to look for; with <code>missing</code>, what should be there</td>
+</tr>
+<tr>
+<td><code>fix</code></td>
+<td></td>
+<td>what to do about a hit</td>
+</tr>
+<tr>
+<td><code>severity</code></td>
+<td><code>"warn"</code></td>
+<td><code>info</code>, <code>warn</code> or <code>error</code></td>
+</tr>
+<tr>
+<td><code>scope</code></td>
+<td><code>["prompt"]</code></td>
+<td>the text it reads: <code>prompt</code>, <code>tool_description</code>, or both</td>
+</tr>
+<tr>
+<td><code>case_sensitive</code></td>
+<td><code>false</code></td>
+<td>whether case matters, as it does for capitals</td>
+</tr>
+<tr>
+<td><code>unless</code></td>
+<td></td>
+<td>drop a hit when this matches in its sentence or the next, as a stated reason does</td>
+</tr>
+<tr>
+<td><code>run</code></td>
+<td><code>0</code></td>
+<td>fire once on this many matching sentences or lines in a row</td>
+</tr>
+<tr>
+<td><code>unit</code></td>
+<td><code>"sentence"</code></td>
+<td>what <code>run</code> counts: <code>sentence</code> or <code>line</code></td>
+</tr>
+<tr>
+<td><code>at_least</code></td>
+<td><code>0</code></td>
+<td>fire once when the pattern matches this many times</td>
+</tr>
+<tr>
+<td><code>missing</code></td>
+<td><code>false</code></td>
+<td>fire when the pattern matches nowhere</td>
+</tr>
+<tr>
+<td><code>models</code></td>
+<td><code>[]</code></td>
+<td>model globs <code>severity</code> applies to; empty means every model the file reaches</td>
+</tr>
+<tr>
+<td><code>otherwise</code></td>
+<td><code>"info"</code></td>
+<td>the severity on every other model</td>
+</tr>
+<tr>
+<td><code>confidence</code></td>
+<td><code>"med"</code></td>
+<td>how sure a hit is: <code>high</code>, <code>med</code> or <code>low</code>; recorded, not yet used by lint</td>
+</tr>
+<tr>
+<td><code>judge</code></td>
+<td></td>
+<td>the classes a model judge would sort hits into; recorded, not yet used by lint</td>
+</tr>
+</tbody>
+</table>
+<p><code>run</code>, <code>at_least</code> and <code>missing</code> are exclusive, and <code>unless</code> only applies to a rule that
+fires per hit. Patterns are matched multiline, and ignore case unless <code>case_sensitive</code> is
+set.</p>
+<p>Beside those fields, a file carries at most one operation:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>extend = true</code></td>
+<td>change only the fields given, keeping the rest</td>
+</tr>
+<tr>
+<td><code>enabled = false</code></td>
+<td>turn the rule off from this file up; in a core default file, retire it</td>
+</tr>
+<tr>
+<td><code>from = "1"</code></td>
+<td>in a project, take the core rule as that release had it</td>
+</tr>
+</tbody>
+</table>
+<p>A core file also carries a header: <code>released</code>, the day of its release, and <code>changes</code>, a
+list of what changed. Every file in one release must agree on the day.</p>
+<h2 id="rule-catalog">Rule catalog<a class="headerlink" href="#rule-catalog" title="Permanent link">&para;</a></h2>
+<p>Every rule validia ships, as of the latest release of each category. This section is
+generated from the installed package when the site is built, so it always matches the
+rules <code>validia lint</code> reads. <strong>Default</strong> is the severity the default file gives every
+model. The last column is what each provider or model file changes; a model not named
+there gets the default.</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Read for</th>
+<th>Rules it changes</th>
+<th>Guidance for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>default</code></td>
+<td>every model</td>
+<td>defines all 41</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>anthropic/default</code></td>
+<td>every <code>anthropic:</code> model</td>
+<td><code>wording/capitals</code>, <code>wording/default-when-unsure</code>, <code>wording/exclamation-marks</code>, <code>reasoning/show-reasoning</code>, <code>output/hold-progress</code></td>
+<td>wording, reasoning, output</td>
+</tr>
+<tr>
+<td><code>anthropic/claude-fable-5-1</code></td>
+<td><code>anthropic:claude-fable-5-1</code> only</td>
+<td><code>output/format-ban</code></td>
+<td>output</td>
+</tr>
+<tr>
+<td><code>anthropic/claude-opus-5</code></td>
+<td><code>anthropic:claude-opus-5</code> only</td>
+<td><code>reasoning/self-verify</code></td>
+<td>reasoning</td>
+</tr>
+<tr>
+<td><code>anthropic/claude-opus-5-5</code></td>
+<td><code>anthropic:claude-opus-5-5</code> only</td>
+<td><code>wording/prohibition-list</code></td>
+<td>wording</td>
+</tr>
+<tr>
+<td><code>anthropic/claude-sonnet-5-5</code></td>
+<td><code>anthropic:claude-sonnet-5-5</code> only</td>
+<td>—</td>
+<td>context</td>
+</tr>
+<tr>
+<td><code>google/default</code></td>
+<td>every <code>google:</code> model</td>
+<td><code>wording/capitals</code>, <code>wording/exclamation-marks</code></td>
+<td>wording</td>
+</tr>
+<tr>
+<td><code>openai/default</code></td>
+<td>every <code>openai:</code> model</td>
+<td><code>wording/capitals</code>, <code>wording/exclamation-marks</code>, <code>tools/examples-in-tool</code></td>
+<td>wording, tools</td>
+</tr>
+</tbody>
+</table>
+<h3 id="wording">wording<a class="headerlink" href="#wording" title="Permanent link">&para;</a></h3>
+<p>Latest release <strong>1.0.0</strong>, 2026-10-07. Writing guidance for <code>anthropic/default</code>, <code>anthropic/claude-opus-5-5</code>, <code>google/default</code>, <code>openai/default</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Finds</th>
+<th>Reads</th>
+<th>Default</th>
+<th>Changed by provider or model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wording/capitals</code></td>
+<td>Emphasis in capitals</td>
+<td>prompt</td>
+<td>info</td>
+<td><code>anthropic/default</code>: warn on <code>claude-opus-4-5</code>, <code>claude-opus-4-6</code>, <code>claude-sonnet-4-6</code>, <code>claude-opus-5</code>, <code>claude-opus-5-5</code>; info on the rest<br><code>google/default</code>: warn on <code>gemini-3*</code>; info on the rest<br><code>openai/default</code>: warn on <code>gpt-4.1*</code>, <code>gpt-5</code>; info on the rest</td>
+</tr>
+<tr>
+<td><code>wording/completion-booster</code></td>
+<td>A completion booster</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>wording/default-when-unsure</code></td>
+<td>Makes a tool the default when in doubt</td>
+<td>prompt</td>
+<td>info</td>
+<td><code>anthropic/default</code>: warn on <code>claude-opus-4-5</code>, <code>claude-opus-4-6</code>, <code>claude-sonnet-4-6</code>, <code>claude-opus-5</code>, <code>claude-opus-5-5</code>; info on the rest</td>
+</tr>
+<tr>
+<td><code>wording/exclamation-marks</code></td>
+<td>Repeated exclamation marks</td>
+<td>prompt</td>
+<td>info</td>
+<td><code>anthropic/default</code>: warn on <code>claude-opus-4-5</code>, <code>claude-opus-4-6</code>, <code>claude-sonnet-4-6</code>, <code>claude-opus-5</code>, <code>claude-opus-5-5</code>; info on the rest<br><code>google/default</code>: warn on <code>gemini-3*</code>; info on the rest<br><code>openai/default</code>: warn on <code>gpt-4.1*</code>, <code>gpt-5</code>; info on the rest</td>
+</tr>
+<tr>
+<td><code>wording/habit-to-break</code></td>
+<td>Names a habit to break</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>wording/hedged-requirement</code></td>
+<td>A hedged requirement</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>wording/prohibition-list</code></td>
+<td>Three or more prohibitions in a row</td>
+<td>prompt</td>
+<td>warn</td>
+<td><code>anthropic/claude-opus-5-5</code>: info, own fix</td>
+</tr>
+<tr>
+<td><code>wording/rule-without-reason</code></td>
+<td>A rule without its reason</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="context">context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h3>
+<p>Latest release <strong>1.0.0</strong>, 2026-10-07. Writing guidance for <code>anthropic/claude-sonnet-5-5</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Finds</th>
+<th>Reads</th>
+<th>Default</th>
+<th>Changed by provider or model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>context/arithmetic-in-prompt</code></td>
+<td>Arithmetic left to the prompt</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>context/bullet-wall</code></td>
+<td>Behaviour written as a wall of bullets</td>
+<td>prompt</td>
+<td>info</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>context/do-not-hallucinate</code></td>
+<td>Forbids hallucinating without saying what to do</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>context/identity-stub</code></td>
+<td>An identity stub for a role</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>context/reminder-line</code></td>
+<td>A reminder line</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>context/repeated-instruction</code></td>
+<td>Repeats an instruction</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>context/restated-default</code></td>
+<td>Restates what the model already does</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>context/special-cases</code></td>
+<td>A list of special cases</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>context/unchecked-quotes</code></td>
+<td>Asks for quotes without checking them</td>
+<td>prompt</td>
+<td>info</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="reasoning">reasoning<a class="headerlink" href="#reasoning" title="Permanent link">&para;</a></h3>
+<p>Latest release <strong>1.0.0</strong>, 2026-10-07. Writing guidance for <code>anthropic/default</code>, <code>anthropic/claude-opus-5</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Finds</th>
+<th>Reads</th>
+<th>Default</th>
+<th>Changed by provider or model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reasoning/numbered-script</code></td>
+<td>A numbered script for a judgment task</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>reasoning/plan-first</code></td>
+<td>Tells the model to plan</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>reasoning/self-verify</code></td>
+<td>A self-verification line</td>
+<td>prompt</td>
+<td>info</td>
+<td><code>anthropic/claude-opus-5</code>: warn</td>
+</tr>
+<tr>
+<td><code>reasoning/show-reasoning</code></td>
+<td>Asks to see the model's reasoning</td>
+<td>prompt</td>
+<td>warn</td>
+<td><code>anthropic/default</code>: error on <code>claude-fable-5</code>, <code>claude-fable-5-1</code>, <code>claude-opus-5</code>, <code>claude-opus-5-5</code>, <code>claude-sonnet-5-5</code>; warn on the rest</td>
+</tr>
+<tr>
+<td><code>reasoning/strategy-coaching</code></td>
+<td>Coaches a strategy</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>reasoning/think-in-prose</code></td>
+<td>Controls thinking in prose</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="output">output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
+<p>Latest release <strong>1.0.0</strong>, 2026-10-07. Writing guidance for <code>anthropic/default</code>, <code>anthropic/claude-fable-5-1</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Finds</th>
+<th>Reads</th>
+<th>Default</th>
+<th>Changed by provider or model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>output/format-ban</code></td>
+<td>Bans formatting</td>
+<td>prompt</td>
+<td>info</td>
+<td><code>anthropic/claude-fable-5-1</code>: warn, own fix</td>
+</tr>
+<tr>
+<td><code>output/hold-progress</code></td>
+<td>Holds back progress updates</td>
+<td>prompt</td>
+<td>info</td>
+<td><code>anthropic/default</code>: warn on <code>claude-fable-5-1</code>, <code>claude-sonnet-5-5</code>; info on the rest</td>
+</tr>
+<tr>
+<td><code>output/json-in-prose</code></td>
+<td>Asks for JSON in prose</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>output/length-cap</code></td>
+<td>A hard length cap in the prompt</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tools">tools<a class="headerlink" href="#tools" title="Permanent link">&para;</a></h3>
+<p>Latest release <strong>1.0.0</strong>, 2026-10-07. Writing guidance for <code>openai/default</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Finds</th>
+<th>Reads</th>
+<th>Default</th>
+<th>Changed by provider or model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tools/capitals-in-tool</code></td>
+<td>Steering in capitals in a tool description</td>
+<td>tool descriptions</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>tools/discourages-tools</code></td>
+<td>Discourages tool use across the board</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>tools/examples-in-tool</code></td>
+<td>Examples inside a tool description</td>
+<td>tool descriptions</td>
+<td>warn</td>
+<td><code>openai/default</code>: own fix</td>
+</tr>
+<tr>
+<td><code>tools/missing-when-not</code></td>
+<td>Does not say when not to use the tool</td>
+<td>tool descriptions</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>tools/rules-in-tool</code></td>
+<td>Behaviour rules inside a tool description</td>
+<td>tool descriptions</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>tools/sales-pitch</code></td>
+<td>Sells the tool instead of describing it</td>
+<td>tool descriptions</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="security">security<a class="headerlink" href="#security" title="Permanent link">&para;</a></h3>
+<p>Latest release <strong>1.0.0</strong>, 2026-10-07.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Finds</th>
+<th>Reads</th>
+<th>Default</th>
+<th>Changed by provider or model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>security/credential</code></td>
+<td>A credential in the prompt</td>
+<td>prompt</td>
+<td>error</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>security/hide-instructions</code></td>
+<td>Asks the model to keep its instructions secret</td>
+<td>prompt</td>
+<td>info</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>security/obey-input</code></td>
+<td>Tells the model to obey the input</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>security/unwrapped-input</code></td>
+<td>Untrusted input without delimiters</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="maintenance">maintenance<a class="headerlink" href="#maintenance" title="Permanent link">&para;</a></h3>
+<p>Latest release <strong>1.0.0</strong>, 2026-10-07.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Finds</th>
+<th>Reads</th>
+<th>Default</th>
+<th>Changed by provider or model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maintenance/change-history</code></td>
+<td>Describes a change instead of how it works now</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>maintenance/expired-date</code></td>
+<td>A date-limited instruction</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>maintenance/grading-talk</code></td>
+<td>Talks about grading</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>maintenance/old-model-name</code></td>
+<td>Names an old model</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>validia lint FILE... [-m MODEL]</code></td>
+<td>check prompts or suites against the rules for a model</td>
+</tr>
+<tr>
+<td><code>validia rules list [-m MODEL]</code></td>
+<td>every rule in use, as a model sees it</td>
+</tr>
+<tr>
+<td><code>validia rules explain RULE [-m MODEL]</code></td>
+<td>one rule: what it finds, its fix, how it matches, its cases, the files it was read from</td>
+</tr>
+<tr>
+<td><code>validia rules guidance -m MODEL</code></td>
+<td>the writing guidance for a model, target by target, with sources</td>
+</tr>
+<tr>
+<td><code>validia rules versions</code></td>
+<td>each category's releases and what changed in them</td>
+</tr>
+<tr>
+<td><code>validia rules test [--all]</code></td>
+<td>prove the rules and examples against their own cases</td>
+</tr>
+<tr>
+<td><code>validia rules extend RULE</code></td>
+<td>write a file in <code>rules/</code> that changes some fields or adds cases</td>
+</tr>
+<tr>
+<td><code>validia rules replace RULE</code></td>
+<td>copy a rule into <code>rules/</code> as a full definition, to edit</td>
+</tr>
+<tr>
+<td><code>validia rules disable RULE</code></td>
+<td>turn a rule off in <code>rules/</code></td>
+</tr>
+<tr>
+<td><code>validia rules fallback RULE --to RELEASE</code></td>
+<td>keep one core rule as an older release had it</td>
+</tr>
+<tr>
+<td><code>validia rules new RULE</code></td>
+<td>add a rule of your own, asking for what is missing</td>
+</tr>
+</tbody>
+</table>
+<p><code>RULE</code> is the rule's id, <code>wording/capitals</code>. <code>validia rules explain</code> also takes the name
+alone, <code>capitals</code>, as long as it names one rule.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 izmailov-labs
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "navigation.sections", "navigation.top", "search.suggest", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

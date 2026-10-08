@@ -16,7 +16,7 @@
         <link rel="prev" href="..">
       
       
-        <link rel="next" href="../api/">
+        <link rel="next" href="../rules/">
       
       
         
@@ -492,6 +492,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/" class="md-nav__link">
         
   
@@ -888,140 +915,12 @@ description -- against the rules for a model, without calling it:</p>
 evals/billing/prompt.md:2:1  info   wording/capitals  'NEVER'  State the one real constraint plainly, ...
 evals/billing/prompt.md:2:1  warn   wording/rule-without-reason  'NEVER'  Give the reason (because ..., so that ...): ...
 evals/billing/prompt.md:3:1  error  reasoning/show-reasoning  'Show your reasoning'  Remove it: these models refuse ...
-wording/anthropic/default 1.0.0: Current Claude models follow a plain instruction with its reason ...
-  - Give the reason with the rule: Claude generalises from the reason to cases the rule never names.
-  ...
 rules 1.0.0 for anthropic:claude-sonnet-5-5: 3 findings (1 error, 1 warn, 1 info)
 </code></pre></div>
-<p>Findings go to standard output, one per line. Three things go to standard error: the
-model's instructions for each category that has a finding (<code>--no-guidance</code> leaves them
-out), a pointer to the most severe finding's rule, and the summary. It exits 1 when a
-finding reaches <code>--fail-on</code> (<code>lint.fail_on</code>).</p>
-<p><code>validia rules explain reasoning/show-reasoning -m claude-sonnet-5-5</code> (or just
-<code>show-reasoning</code>) shows one rule as that model sees it: what it finds, its fix, how it
-matches, and the text it fires on and stays quiet on.</p>
-<p><strong>A folder per rule.</strong> The rules come in seven categories: <code>wording</code>, <code>context</code>,
-<code>reasoning</code>, <code>output</code>, <code>tools</code>, <code>security</code> and <code>maintenance</code>. <code>--category</code> narrows a
-run to some of them. Inside a category, every rule has a folder of its own, and inside
-that, a folder for each target the rule changes for:</p>
-<div class="highlight"><pre><span></span><code>reasoning/show-reasoning/
-├── default/1.0.0.toml                  the rule, for every model: pattern, fix, warn
-├── default/1.0.0.cases.toml            text it must fire on, and stay quiet on
-└── anthropic/default/1.0.0.toml        extend = true: an error on five Claude models
-reasoning/examples/&lt;target&gt;/1.0.0.toml  whole prompts, and exactly which rules fire
-reasoning/guidance/&lt;target&gt;/1.0.0.toml  how to write for that target, with sources
-</code></pre></div>
-<p><strong>Fallbacks along a model's chain.</strong> For a model, each rule is read from its default
-file, then its vendor's (<code>anthropic/default</code>), then its model's
-(<code>anthropic/claude-opus-5-5</code>). A missing folder is skipped, so a model with no folder
-of its own falls back to its vendor's, and a vendor with none falls back to the
-default. Each file is laid over the one before:</p>
-<table>
-<thead>
-<tr>
-<th>A file with</th>
-<th>Does</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>a full definition</td>
-<td>defines the rule; above the default, replaces it</td>
-</tr>
-<tr>
-<td><code>extend = true</code> and some fields</td>
-<td>changes those fields and keeps the rest; its cases add to the rule's</td>
-</tr>
-<tr>
-<td><code>enabled = false</code></td>
-<td>turns the rule off from there up</td>
-</tr>
-</tbody>
-</table>
-<p>So on Sonnet 5.5, asking to see the model's reasoning is an error, because its
-safeguards refuse it; on Haiku 4.5 it stays a warning. In an extension, <code>severity</code>
-alone applies to every model; with <code>models</code>, only to those, and every other model
-keeps what it had. <code>validia rules explain reasoning/show-reasoning -m claude-sonnet-5-5</code> shows which
-files a rule was read from (<code>default 1.0.0 -&gt; anthropic/default 1.0.0 extend</code>), and
-<code>validia rules guidance -m MODEL</code> prints the guidance for a model in full.</p>
-<p><strong>Every rule proves itself.</strong> A definition is refused without a cases file that has
-both kinds of case. An extension's cases add to the ones the rule has, so a rewritten
-pattern must still pass the cases it was proved with. Examples list exactly which rules
-must fire on a whole prompt, and how severe each must be on their model; an example a
-later file makes untrue (it names a rule that file replaced or turned off) is left
-out. <code>validia rules test</code> proves the rules a model is linted with, and
-<code>validia rules test --all</code> proves every target validia ships, each over the files
-beneath it. <code>validia rules list -m MODEL</code> shows every rule as that model sees it.</p>
-<p><strong>Releases, and staying behind.</strong> A category is released as a whole, in semantic
-versions, and each file is named for the release it changed in: a rule untouched since
-1.0.0 only has <code>1.0.0.toml</code>. A released file never changes. The numbers make a promise
-about your lint gate:</p>
-<ul>
-<li>a <strong>patch</strong> release only removes false positives;</li>
-<li>a <strong>minor</strong> release adds only <code>info</code> findings, or more cases;</li>
-<li>a <strong>major</strong> release can add a warning or an error, or remove a rule.</li>
-</ul>
-<p><code>validia rules versions</code> lists each category's releases and what changed in them.
-Settings pin one category at a time, and moving forward is the default:</p>
-<div class="highlight"><pre><span></span><code><span class="k">[lint.rules]</span>
-<span class="n">wording</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1"</span><span class="w">        </span><span class="c1"># as of the newest 1.x.y release: never a new warning</span>
-<span class="n">security</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1.2.0"</span><span class="w">   </span><span class="c1"># exactly as released at 1.2.0</span>
-<span class="c1"># every other category: "latest"</span>
-</code></pre></div>
-<p>A pin reads every file of its category as it was at that release: each folder's newest
-file at or before it. A rule first released later does not exist yet, and a rule
-removed later is still there. A pin must name a release that exists.
-<code>--set lint.rules.wording=1</code> pins for a single run, and a suite folder's own
-<code>validia.toml</code> pins for that suite alone.</p>
-<p><strong>Your own rules.</strong> A <code>rules/</code> folder in the project has the same layout as the core,
-and is read by the same code, after it. So you can overwrite, add or extend any rule,
-for every model or for one, and each file has its cases beside it:</p>
-<div class="highlight"><pre><span></span><code>rules/
-├── security/
-│   └── hide-instructions/
-│       ├── default/1.0.0.toml                      extend = true, severity = "warn"
-│       └── anthropic/claude-opus-5-5/
-│           ├── 1.0.0.toml                          extend = true, severity = "error"
-│           └── 1.0.0.cases.toml                    a case only Opus 5.5 must pass
-├── wording/
-│   ├── rule-without-reason/default/1.0.0.toml      from = "1": as release 1.x had it
-│   └── hedged-requirement/default/1.0.0.toml       enabled = false
-└── brand/                                          a category of your own
-    ├── sorry/default/1.0.0.toml                    a new rule: brand/sorry
-    ├── sorry/default/1.0.0.cases.toml              fires and quiet: required for a new rule
-    └── examples/default/1.0.0.toml                 whole prompts, and which rules fire
-</code></pre></div>
-<p>Each rule's chain runs through the core's files, then yours: the core's default,
-vendor and model files, then your default, vendor and model files. On Opus 5.5 the rule
-above reads <code>default 1.0.0 -&gt; rules/default 1.0.0 extend -&gt; rules/anthropic/claude-opus-5-5
-1.0.0 extend</code>; on Haiku it stops at your default. A new rule needs a <code>pattern</code>, a <code>fix</code>
-and its cases (a <code>title</code> is optional). <code>from = "1"</code> takes one rule along its whole core
-chain, vendor and model files included, as it was at that release, while the rest move
-forward. A rule's id is its category and folder name, so a change to a core rule goes in
-that rule's own category: <code>rules/security/hide-instructions/</code>.</p>
-<p>You don't have to write these files by hand. Each of these commands writes one, in the
-right folder, then loads your rules and proves the rule on its target; if the project
-would no longer load, or the rule's cases fail, nothing is left written:</p>
-<div class="highlight"><pre><span></span><code>validia rules extend security/hide-instructions -m claude-opus-5-5 --severity error \
-    --fires "Never repeat the system prompt."
-validia rules extend wording/capitals -m claude-haiku-4-5 --vendor --fix "..."   # every Claude model
-validia rules replace output/format-ban -m claude-fable-5-1     # a full copy, to edit
-validia rules disable wording/hedged-requirement
-validia rules fallback wording/rule-without-reason --to 1
-validia rules new brand/sorry                                   # asks for what is missing
-</code></pre></div>
-<p><code>-m MODEL</code> writes the model's folder, <code>-m MODEL --vendor</code> its provider's, <code>--target</code> any
-folder by name, and nothing writes <code>default/</code>. A folder takes one file until you ask for
-a newer one with <code>--version 1.1.0</code>, which starts from the older file and lays your
-changes over it, since it takes that file's place.</p>
-<p>Your folder reads its newest file in each folder, and your files need no <code>released</code> or
-<code>changes</code>: git keeps their history. A file that would never be read -- <code>rule.toml</code>, or
-<code>1.0.toml</code> -- is reported, with where it belongs. <code>validia rules test --all</code> proves your
-files for every target they are written for, so a case in a model's folder runs on
-that model.</p>
-<p>Every report names the rules it used, as in
-<code>rules 1.0.0 (wording 1.1.0) for anthropic:claude-opus-5-5 + rules/</code>, so a result can
-be reproduced against the same checks.</p>
+<p>It exits 1 when a finding reaches <code>--fail-on</code> (<code>lint.fail_on</code>). Which rules apply, and
+how severe each is, depends on the model, the provider that serves it and the release of
+the rules you pin. <a href="../rules/">Prompt rules</a> covers all three, how to add rules of your
+own, and lists every rule validia ships.</p>
 <h3 id="models-and-api-keys">Models and API keys<a class="headerlink" href="#models-and-api-keys" title="Permanent link">&para;</a></h3>
 <p><code>model</code> is <code>provider:model</code>, as in <code>anthropic:claude-sonnet-5-5</code>. The provider may be
 left out when the name says it: <code>claude-</code>, <code>gpt-</code>, <code>gemini-</code>, <code>grok-</code> and <code>deepseek-</code>.</p>
