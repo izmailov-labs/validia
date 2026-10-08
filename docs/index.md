@@ -27,5 +27,6 @@ checkers see its annotations without stubs.
 ## Where to go next
 
 - [Getting started](getting-started.md) — install and local development
+- [Prompt rules](rules.md) — what `validia lint` checks, per model, provider and release
 - [API reference](api.md) — generated from the source
 - [Changelog](changelog.md)

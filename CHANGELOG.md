@@ -122,6 +122,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Settings through whence: `validia.toml`, `[tool.validia]` in `pyproject.toml`,
   `VALIDIA_*` variables, `.env`, profiles (`-p`), `--set key=value` and per-command
   flags, with unknown keys and out-of-range values reported against their origin.
+- A Prompt rules page on the docs site: how the model, its provider and the pinned
+  release decide which rules apply and how severe each is, project rules, the rule
+  file reference, and a catalog of every core rule with its provider and model
+  overrides, generated from the installed package at build time.
 
 ### Changed
 

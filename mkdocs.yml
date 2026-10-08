@@ -6,9 +6,11 @@ repo_name: izmailov-labs/validia
 edit_uri: edit/main/docs/
 copyright: Copyright &copy; 2026 izmailov-labs
 
-# docs/research/ holds internal working notes, not published documentation.
+# docs/research/ holds internal working notes, not published documentation, and
+# docs/_hooks/ the build's own code.
 exclude_docs: |
   research/
+  _hooks/
 
 theme:
   name: material
@@ -39,6 +41,10 @@ theme:
 watch:
   - src
 
+# The rule catalog on rules.md is generated from the installed package at build time.
+hooks:
+  - docs/_hooks/rules_catalog.py
+
 plugins:
   - search
   - mkdocstrings:
@@ -55,6 +61,7 @@ plugins:
 nav:
   - Home: index.md
   - Getting started: getting-started.md
+  - Prompt rules: rules.md
   - API reference: api.md
   - Changelog: changelog.md
 
