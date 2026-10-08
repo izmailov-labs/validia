@@ -122,10 +122,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Settings through whence: `validia.toml`, `[tool.validia]` in `pyproject.toml`,
   `VALIDIA_*` variables, `.env`, profiles (`-p`), `--set key=value` and per-command
   flags, with unknown keys and out-of-range values reported against their origin.
-- A Prompt rules page on the docs site: how the model, its provider and the pinned
-  release decide which rules apply and how severe each is, project rules, the rule
-  file reference, and a catalog of every core rule with its provider and model
-  overrides, generated from the installed package at build time.
+- A Prompt rules section on the docs site, in the core rules' own layout: a
+  default page, a page per provider and per model showing every rule as that model
+  sees it with its writing guidance, rule versions with each category's release
+  history, and project rules with the rule file reference. Every rules page has a
+  release dropdown per category, showing it as a pin to that release reads it. The
+  tables are generated from the installed package at build time, and the build fails
+  when a provider or model the rules ship has no page.
 
 ### Changed
 
