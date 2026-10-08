@@ -129,6 +129,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   release dropdown per category, showing it as a pin to that release reads it. The
   tables are generated from the installed package at build time, and the build fails
   when a provider or model the rules ship has no page.
+- Examples for every rule on the Prompt rules pages: its cause and effect, the text it
+  flags (negative) with the exact words flagged, the text it stays quiet on (positive),
+  and its fix, plus each category's whole prompts before and after. Cause and effect
+  live in `docs/rules/effects.toml`, grounded in the research behind each rule; the
+  build fails when a rule has no entry.
 
 ### Changed
 

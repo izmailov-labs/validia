@@ -1,0 +1,186 @@
+# Cause and effect for each core rule, shown beside its examples on the prompt rules
+# pages. Only the docs build reads this file; validia does not ship it.
+#
+# cause:  what the prompt says, in the words the rule matches.
+# effect: what that does to the model, as the research behind the rule found it.
+#         A claim the research marks contested or unmeasured says so.
+#
+# The build fails when a rule has no entry, or an entry names no rule.
+
+# wording
+
+["wording/prohibition-list"]
+cause = "Three or more prohibitions in a row: Never..., Don't..., Avoid..."
+effect = "The model learns what to avoid but not what to do, and guesses at the behaviour you wanted. Anthropic's guidance is to say what to do instead, and keep a prohibition for a real business or policy rule."
+
+["wording/habit-to-break"]
+cause = "Names a habit to break: \"you tend to...\", \"don't be too...\"."
+effect = "The prompt describes the behaviour you don't want instead of the one you do, so the model has nothing to aim at."
+
+["wording/capitals"]
+cause = "MUST, NEVER, ALWAYS, CRITICAL or IMPORTANT in capitals."
+effect = "Capitals add pressure, not meaning. Opus 4.5 to 5.5, Sonnet 4.6, GPT-4.1, GPT-5 and Gemini 3 are documented to overtrigger on aggressive wording, applying the rule where it does not fit."
+
+["wording/exclamation-marks"]
+cause = "Repeated exclamation marks: \"!!\"."
+effect = "Emphasis the same models overtrigger on, with no information about when the rule applies."
+
+["wording/default-when-unsure"]
+cause = "\"If in doubt, use...\" or \"Default to...\"."
+effect = "Doubt becomes the trigger: the model reaches for the tool or behaviour whenever it is unsure. Anthropic: \"'If in doubt, use [tool]' will cause overtriggering.\""
+
+["wording/rule-without-reason"]
+cause = "An absolute rule (always, never, must, do not) with no because, so that, since or otherwise beside it."
+effect = "Without the reason the model can only follow the words; with it, it knows the goal. Anthropic: context or motivation \"can help Claude better understand your goals\". That it then covers cases the rule never names is asserted, not yet measured."
+
+["wording/hedged-requirement"]
+cause = "A hedge on a requirement: try to, if possible, ideally, where appropriate, you may want to."
+effect = "Newer models read instructions literally, so a hedge reads as permission to skip the requirement: \"leftover hedges ... are now read literally as permission to under-deliver\"."
+
+["wording/completion-booster"]
+cause = "A generic push: be thorough, do not be lazy, don't stop early."
+effect = "Current models are already proactive, so the push overshoots: \"be maximally thorough\" became dozens of unneeded knowledge-base searches."
+
+# context
+
+["context/bullet-wall"]
+cause = "Behaviour written as four or more bullet lines in a row."
+effect = "A bullet tends to drop the reason that lets the model weigh a rule against the others. Lists belong where the order or completeness of steps matters; that bullets flatten priority is asserted, not measured."
+
+["context/identity-stub"]
+cause = "\"You are a helpful assistant\", or an expert, with nothing about the task."
+effect = "The identity stands in for what the model needs, the audience, the product and the quality bar, so replies stay generic. Personas alone give no accuracy gain in published measurements."
+
+["context/restated-default"]
+cause = "Tells the model to be accurate, helpful, clear or concise."
+effect = "The model already does this, so the line spends attention without adding anything only you know. Irrelevant bulk is measured to hurt; generic virtues hurting is asserted."
+
+["context/repeated-instruction"]
+cause = "Restates an instruction: \"Remember,\", \"Again,\", \"As stated above\"."
+effect = "The repeat adds length rather than meaning, and two copies drift apart when one is edited. Repetition helps some models with thinking off, and is neutral to slightly positive with it on."
+
+["context/reminder-line"]
+cause = "A \"Reminder:\" line."
+effect = "A blanket reminder becomes noise the model learns to skip; where drift is seen, a turn-scoped reminder works better. Contested: some vendor guides still re-append instructions every few turns."
+
+["context/unchecked-quotes"]
+cause = "Asks the model to quote the relevant passages first."
+effect = "Quote-first is contested: its measurements are from Claude 2, and current models can reproduce a passage without it being word for word. Unchecked, a quote can carry an error that looks sourced."
+
+["context/do-not-hallucinate"]
+cause = "\"Do not hallucinate\" or \"don't make things up\"."
+effect = "The model cannot act on a ban on an error it does not notice. Permission to say \"I don't know\", and where to send the user, is what Anthropic says \"can drastically reduce false information\"."
+
+["context/arithmetic-in-prompt"]
+cause = "Points, scores or arithmetic left for the model to work out."
+effect = "Code computes more reliably than the model: moving arithmetic into code measured +15 points on GSM8K, and Sonnet 5.5 is \"less accurate\" when it skips thinking on totals."
+
+["context/special-cases"]
+cause = "Two or more \"If the user...\" or \"If the customer...\" conditionals."
+effect = "A maze of special cases \"fails unpredictably between them\": the model handles the named cases and guesses on the rest. A principle with its scope stated covers both."
+
+# reasoning
+
+["reasoning/numbered-script"]
+cause = "A numbered step script (`Step 1`, `Step 2`) for a task that needs judgment."
+effect = "Prescriptive steps \"can degrade output quality\" on current models, which follow the script even where the task needs judgment. Fixed or fragile procedures keep their scripts."
+
+["reasoning/plan-first"]
+cause = "Tells the model to plan before acting."
+effect = "Current models plan when the task needs it, and forcing it can cause over-planning. Contested: GPT-4.1 gained 4% from explicit planning, and GPT-5's guide still prescribes it."
+
+["reasoning/strategy-coaching"]
+cause = "Coaches a strategy: \"it's usually best to...\", \"a good approach is...\"."
+effect = "Coaching ties the model to your route instead of the goal; saying what a good result is leaves it room to find a better one. Asserted, not measured."
+
+["reasoning/think-in-prose"]
+cause = "Controls thinking in prose: think step by step, think harder, don't overthink."
+effect = "Thinking is set by the model's effort settings, so prose is redundant at best: measured +2.9% on o3-mini and -3.3% on Gemini 2.5 Flash, at 20 to 80% more time."
+
+["reasoning/show-reasoning"]
+cause = "Asks to see the model's reasoning, or for `<scratchpad>` or `<thinking>` tags."
+effect = "Requests to expose reasoning \"may be refused\" on Fable 5, Fable 5.1, Opus 5, Opus 5.5 and Sonnet 5.5, so the prompt fails on those models. A short justification asks for what you need."
+
+["reasoning/self-verify"]
+cause = "A self-verification line: double-check, verify your answer, before you finish."
+effect = "Opus 5 \"verifies its own work without being told to ... removing them reduces wasted tokens with no loss in quality\". Elsewhere the effect depends on the model and its effort, so it is information until an experiment shows the line pays."
+
+# output
+
+["output/format-ban"]
+cause = "A blanket ban on structure: never use bullets, no headers."
+effect = "Fable 5.1 already under-formats, and \"anti-formatting rules written for those models can suppress structure the content needs\"."
+
+["output/json-in-prose"]
+cause = "Asks for JSON in prose: \"Output only valid JSON\"."
+effect = "Prose cannot enforce a format; structured outputs or a strict tool can. The old workaround, an assistant prefill, is rejected by Claude 4.6 and later."
+
+["output/length-cap"]
+cause = "A hard cap or cadence: at most 3 sentences, under 100 words, every 5 tool calls."
+effect = "Caps and fixed update cadences are scaffolding current models no longer need, and a hard cap can starve reasoning (contested). Describe the reader instead, and enforce real limits in the harness."
+
+["output/hold-progress"]
+cause = "Holds back progress updates: hold all findings, don't narrate, no interim."
+effect = "Fable 5.1 and Sonnet 5.5 already write fewer updates during long tool runs, so a suppressor makes long silences longer. Updates are asked for in the request settings, where you want them."
+
+# tools
+
+["tools/missing-when-not"]
+cause = "A tool description that never says when not to use the tool."
+effect = "The model cannot tell the tool from its neighbours and calls it on the wrong requests. The description is \"by far the most important factor in tool performance\"."
+
+["tools/sales-pitch"]
+cause = "Sells the tool: \"the best way to...\", \"should be called whenever...\"."
+effect = "Promotional wording biases selection: \"most effective function\" moved call share to 78.3%, against 10.5%, on GPT-4.1 and Qwen, and sales text beside a good description erases its gains."
+
+["tools/capitals-in-tool"]
+cause = "MUST, ALWAYS or NEVER in capitals inside a tool description."
+effect = "Steering in capitals makes models overcall the tool; documented for Opus 4.5 and 4.6."
+
+["tools/rules-in-tool"]
+cause = "Behaviour rules inside a tool description: always recommend..., after showing..."
+effect = "The rule steers the model from a place nobody reviews as policy, and travels with the tool rather than the prompt it belongs to."
+
+["tools/examples-in-tool"]
+cause = "Examples inside a tool description: `Example:`, `e.g.`, `User:` and `Assistant:` lines."
+effect = "Examples in prose \"may hurt performance for reasoning models\", and removing them did not degrade MCP tools. In the provider's `input_examples` field they raised accuracy from 72% to 90%."
+
+["tools/discourages-tools"]
+cause = "Discourages tools across the board: only use tools when strictly necessary, minimise tool calls."
+effect = "Blanket discouragement makes models skip tools they need. Anthropic: \"check your prompt for language that discourages tool use ... and remove it\"."
+
+# security
+
+["security/credential"]
+cause = "An API key, access key or private key in the prompt."
+effect = "Prompts leak (OWASP LLM07): anyone who extracts the prompt gets the secret."
+
+["security/unwrapped-input"]
+cause = "Untrusted input, such as `{message}` or `{{page}}`, placed without tags around it."
+effect = "The model cannot tell data from instructions, so text in the input can steer it: prompt injection (OWASP LLM01)."
+
+["security/obey-input"]
+cause = "Tells the model to follow instructions in an email, document, page or file."
+effect = "Whoever wrote that content now steers the model (OWASP LLM01)."
+
+["security/hide-instructions"]
+cause = "Asks the model to keep its instructions secret: never reveal this prompt."
+effect = "A request, not a control: determined users extract prompts anyway (OWASP LLM07), so it gives false comfort. Keep secrets out of the prompt and watch outputs for a planted canary."
+
+# maintenance
+
+["maintenance/change-history"]
+cause = "Describes a change: now works differently, no longer, instead of."
+effect = "The model reads the prompt fresh every time and never saw the old version, so the history tells it nothing it can act on. Prompts \"accumulate the union of every generation's mitigations\"."
+
+["maintenance/expired-date"]
+cause = "An instruction limited by a date: before 2026-03, as of 2025-12."
+effect = "Once the date passes the line is dead weight or wrong, and nothing removes it. Stale text is measured to cost: removing it restored 7 to 11 points on Opus 5."
+
+["maintenance/grading-talk"]
+cause = "Talks about grading: graded, rubric, hidden tests, you will be scored."
+effect = "Grader talk \"pushes effort toward being watched\": the model works for the check instead of the task. Stating every requirement the grader checks cut cheating from over 85% to 1% on GPT-5."
+
+["maintenance/old-model-name"]
+cause = "Names a retired model: claude-2, claude-3, claude-instant, 3.5, 3.7."
+effect = "The line is most likely a workaround for that model that no one removed. On Opus 5, removing stale text restored 7 to 11 points."

@@ -31,6 +31,17 @@ CORE = {
     "wording/hedge/default/1.1.0.toml": V2
     + 'title = "A hedge"\npattern = "try to"\nfix = "Make it firm."\nseverity = "info"\n',
     "wording/hedge/default/1.1.0.cases.toml": 'fires = ["Try to help."]\nquiet = ["Help."]\n',
+    # Whole prompts: one that fires, one that does not.
+    "wording/examples/default/1.0.0.toml": V1
+    + '[[examples]]\nname = "loud"\ntext = "IMPORTANT: brief.\\nIMPORTANT: kind."\n'
+    + 'fires = ["caps"]\ncounts = { "caps" = 2 }\n\n'
+    + '[[examples]]\nname = "plain"\ntext = "Be brief."\nfires = []\n',
+}
+
+
+EFFECTS = {
+    "wording/caps": ("Capitals.", "The model overtriggers."),
+    "wording/hedge": ("A hedge.", "The model reads it as optional."),
 }
 
 
@@ -119,9 +130,57 @@ def test_an_unknown_target_is_a_warning(
     assert "'acme/nope', which is not a target of the rules" in caplog.text
 
 
+def test_a_rule_example_has_cause_effect_negative_and_positive(
+    hook: ModuleType, core: Path
+) -> None:
+    page = view(
+        hook.expand("<!-- rules-page: default -->", "rules/default.md", core, EFFECTS), "1.1.0"
+    )
+    example = page.split('??? example "wording/caps: Capitals"')[1].split("???")[0]
+
+    assert "**Cause:** Capitals." in example
+    assert "**Effect:** The model overtriggers." in example
+    assert "✗ **Negative:** `lint` flags it as **info**." in example
+    assert "- <code>IMPORTANT: brief.</code> flags <code>IMPORTANT</code>" in example
+    assert "✓ **Positive:** `lint` stays quiet." in example
+    assert "- <code>Brief.</code>" in example
+    assert "**Fix:** Say it plainly." in example
+
+
+def test_a_model_page_gives_examples_for_the_rules_it_changes(hook: ModuleType, core: Path) -> None:
+    page = hook.expand(
+        "<!-- rules-page: acme/acme-big -->", "rules/acme/acme-big.md", core, EFFECTS
+    )
+    newest = view(page, "1.1.0")
+
+    assert "✗ **Negative:** `lint` flags it as **error** on this model." in newest
+    assert '??? example "wording/hedge' not in newest
+    assert "Examples for every other rule are on the [`default`](../default.md) page." in newest
+
+
+def test_whole_prompt_examples_say_what_fires(hook: ModuleType, core: Path) -> None:
+    page = view(
+        hook.expand("<!-- rules-page: default -->", "rules/default.md", core, EFFECTS), "1.1.0"
+    )
+
+    assert '??? failure "Whole prompt: loud"' in page
+    assert "    IMPORTANT: brief.\n    IMPORTANT: kind." in page
+    assert "✗ `lint` flags `wording/caps` 2 times." in page
+    assert '??? success "Whole prompt: plain"' in page
+    assert "✓ `lint` flags nothing." in page
+
+
+def test_every_rule_needs_a_cause_and_effect(hook: ModuleType, core: Path) -> None:
+    catalog = hook._catalog(core, {"wording/caps": ("A cause.", "An effect.")})
+
+    assert catalog.rule_ids() - set(catalog.effects) == {"wording/hedge"}
+
+
 def test_a_target_without_a_page_is_a_warning(
     hook: ModuleType, caplog: pytest.LogCaptureFixture
 ) -> None:
+    # The core rules and docs/rules/effects.toml as they ship: a warning about a missing
+    # cause and effect would show up here too.
     pages = [hook.page_of(target) for target in hook._catalog(None).targets]
     files = [SimpleNamespace(src_uri=page) for page in pages if page != "rules/default.md"]
 
