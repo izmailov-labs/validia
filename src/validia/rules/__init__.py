@@ -59,8 +59,10 @@ from .matching import (
 )
 from .model import (
     CATEGORIES,
+    CHECKS,
     PROJECT_RULES,
     SEVERITIES,
+    Check,
     Example,
     Finding,
     Guidance,
@@ -73,12 +75,15 @@ from .model import (
     Scope,
     Severity,
     Target,
+    check_for,
 )
 
 __all__ = [
     "CATEGORIES",
+    "CHECKS",
     "PROJECT_RULES",
     "SEVERITIES",
+    "Check",
     "Example",
     "Finding",
     "Guidance",
@@ -91,6 +96,7 @@ __all__ = [
     "Scope",
     "Severity",
     "Target",
+    "check_for",
     "core_categories",
     "core_releases",
     "core_rules",

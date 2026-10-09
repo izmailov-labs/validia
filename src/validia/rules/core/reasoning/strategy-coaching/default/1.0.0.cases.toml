@@ -1,4 +1,10 @@
 # Cases for reasoning/strategy-coaching 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["A good approach is to read the whole ticket first."]
-quiet = ["Read the whole ticket before you classify it."]
+fires = [
+  "A good approach is to read the whole ticket first.",
+  "The trick is to look at the order history first.",
+]
+quiet = [
+  "Read the whole ticket before you classify it.",
+  "A good reply names the order and the next step.",
+]

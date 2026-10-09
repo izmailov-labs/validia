@@ -1,0 +1,13 @@
+# How to write instructions for openai models.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+summary = "GPT-4.1 and GPT-5 read hedges literally."
+instructions = [
+  "Hedges ('try to', 'if possible') are read literally by GPT-4.1 and GPT-5: make each firm or plainly optional.",
+]
+sources = [
+  "OpenAI, GPT-4.1 prompting guide",
+  "OpenAI cookbook, GPT-5 prompt optimizer",
+]

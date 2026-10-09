@@ -1,7 +1,7 @@
 # An example validia suite for free-text answers: questions about a product,
 # answered from its help notes. Check it without calling a model:
 #
-#   validia run $suite_path --model MODEL --dry-run
+#   validia run $suite_path --dry-run
 #
 # The expected answers live here and the prompt lives in its own file, so the
 # model under test only ever sees prompt.md and each case's input.
@@ -18,6 +18,14 @@ prompt = "prompt.md"  # the system prompt under test, relative to this file
 # spacing; `matches` is a regular expression (add (?i) to ignore case);
 # `equals` is for the rare answer with one right wording.
 type = "text"
+
+[rules]
+# The prompt rules prompt.md is tested with, before any model
+# runs: `validia run --dry-run` lists each one as a test. Name categories, rule
+# ids (wording/capitals), or `regex` and `model` for how rules decide; rules
+# tagged `model` are skipped without a model. Change one rule with
+# `validia rules extend`, `replace` or `disable`.
+run = ["wording", "instructions", "context", "reasoning", "output", "tools", "security", "maintenance"]
 
 # Half the questions are covered by the help notes and half are not. The
 # uncovered ones are where a prompt that guesses fails: the right answer

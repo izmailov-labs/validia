@@ -276,7 +276,7 @@ class SuiteCommands(CommandBase):
             print(f"wrote {self._shown(path)}")
         if suite_path is not None:
             print(
-                f"next: validia run {self._shown(suite_path)} --model MODEL --dry-run",
+                f"next: validia run {self._shown(suite_path)} --dry-run",
                 file=sys.stderr,
             )
         return 0
@@ -363,7 +363,7 @@ class SuiteCommands(CommandBase):
         for file in written:
             print(f"wrote {self._shown(suite.path.parent / file)}")
         print(
-            f"next: validia run {self._shown(suite.path)} --model MODEL --dry-run",
+            f"next: validia run {self._shown(suite.path)} --dry-run",
             file=sys.stderr,
         )
         return 0

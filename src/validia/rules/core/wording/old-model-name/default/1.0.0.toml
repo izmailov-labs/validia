@@ -1,0 +1,9 @@
+# wording/old-model-name, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "Names an old model"
+pattern = '\bclaude[- ](instant|[23](\.\d)?)\b|\b(sonnet|opus|haiku)[- ][23](\.\d)?\b|\b3\.[57][- ](sonnet|opus|haiku)\b|\bgpt-3\.5\b|\btext-davinci'
+confidence = "low"
+fix = "Check the line is still true on the current model; delete it if it was a workaround."

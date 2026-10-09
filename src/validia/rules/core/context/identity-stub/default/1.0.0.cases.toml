@@ -1,4 +1,11 @@
 # Cases for context/identity-stub 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["You are a helpful assistant."]
-quiet = ["You are the support assistant for Acme Shop."]
+fires = [
+  "You are a helpful assistant.",
+  "You're a helpful assistant.",
+  "Act as an expert lawyer.",
+]
+quiet = [
+  "You are the support assistant for Acme Shop.",
+  "You are an expert in Acme's refund policy for UK customers, and you answer store staff.",
+]

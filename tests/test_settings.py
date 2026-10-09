@@ -37,6 +37,7 @@ def test_keys_cover_the_schema_in_declaration_order() -> None:
         "run.fail_under",
         "lint.fail_on",
         "lint.rules.wording",
+        "lint.rules.instructions",
         "lint.rules.context",
         "lint.rules.reasoning",
         "lint.rules.output",

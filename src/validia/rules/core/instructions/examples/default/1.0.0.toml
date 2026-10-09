@@ -1,0 +1,20 @@
+# Whole prompts for instructions, as every model sees them: each names exactly the rules
+# that must fire on it.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "instructions, before"
+fires = ["prohibition-list", "rule-without-reason", "hedged-requirement", "completion-booster"]
+text = '''Never mention competitors. Never use slang. Never start a reply with "Certainly".
+Try to include a summary if possible.
+Be thorough. Do not stop early.'''
+
+[[examples]]
+name = "instructions, after"
+fires = []
+text = '''Customers read these replies on their phones between other tasks, so write in plain,
+friendly language. Don't name or compare competitors: legal reviews every comparison we
+publish, and support replies are not reviewed. End with a short summary of what was
+resolved and what happens next.'''

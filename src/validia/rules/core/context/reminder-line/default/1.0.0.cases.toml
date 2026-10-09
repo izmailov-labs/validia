@@ -1,4 +1,10 @@
 # Cases for context/reminder-line 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["Reminder: cite the notes.", "(every 3rd turn) Reminder: be polite."]
-quiet = ["Cite the notes."]
+fires = [
+  "Cite the notes.\nAnswer in English.\nReminder: cite the notes.",
+  "(every 3rd turn) Reminder: be polite.",
+]
+quiet = [
+  "Cite the notes.",
+  "Reminder: the shop closes at 6pm on Sundays.",
+]

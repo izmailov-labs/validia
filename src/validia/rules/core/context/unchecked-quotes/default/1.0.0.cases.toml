@@ -1,4 +1,10 @@
 # Cases for context/unchecked-quotes 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["First, quote the relevant passages."]
-quiet = ["Answer from the passages."]
+fires = [
+  "First, quote the relevant passages.",
+  "Cite the exact sentences you rely on, word for word.",
+]
+quiet = [
+  "Answer from the passages.",
+  "Quote the relevant passages; the app checks each quote against its source.",
+]

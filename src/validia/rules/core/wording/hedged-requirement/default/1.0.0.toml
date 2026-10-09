@@ -1,9 +1,0 @@
-# wording/hedged-requirement, for every model.
-
-released = "2026-10-07"
-changes = ["First release."]
-
-title = "A hedged requirement"
-pattern = '\b(try to|if possible|ideally|where appropriate|you may want to)\b'
-judge = "hedge"
-fix = "Make it a firm requirement, or say plainly that it is optional: newer models read hedges literally."

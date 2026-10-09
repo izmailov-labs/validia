@@ -1,9 +1,0 @@
-# maintenance/old-model-name, for every model.
-
-released = "2026-10-07"
-changes = ["First release."]
-
-title = "Names an old model"
-pattern = 'claude-2|claude-3|claude-instant|\b3\.[57]\b'
-confidence = "low"
-fix = "Check the line is still true on the current model; delete it if it was a workaround."

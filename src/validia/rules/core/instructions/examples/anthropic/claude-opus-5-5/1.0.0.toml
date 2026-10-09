@@ -1,0 +1,15 @@
+# Whole prompts for instructions on claude-opus-5-5: each names exactly the rules that
+# must fire on it, and how severe each must be.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+[[examples]]
+name = "Opus 5.5 before"
+fires = { "prohibition-list" = "info", "rule-without-reason" = "warn" }
+text = "Avoid jargon. Avoid emoji. Never use slang."
+
+[[examples]]
+name = "Opus 5.5 after"
+fires = {}
+text = "Write plainly, without jargon or emoji, because customers read these replies on their phones."

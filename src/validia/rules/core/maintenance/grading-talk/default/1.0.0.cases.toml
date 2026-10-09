@@ -1,4 +1,12 @@
 # Cases for maintenance/grading-talk 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["You will be graded on accuracy.", "Hidden tests check your answer."]
-quiet = ["Answer the customer's question."]
+fires = [
+  "You will be graded on accuracy.",
+  "Hidden tests check your answer.",
+  "Your answers are scored by an automated checker.",
+]
+quiet = [
+  "Answer the customer's question.",
+  "Write at a 10th grade reading level.",
+  "Recommend only consumer-grade routers.",
+]

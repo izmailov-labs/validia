@@ -1,4 +1,12 @@
 # Cases for context/repeated-instruction 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["Remember, cite the notes.", "As stated above, cite the notes."]
-quiet = ["Cite the notes once per answer."]
+fires = [
+  "Cite the notes.\nAnswer in English.\nRemember, cite the notes.",
+  "Keep replies short. Use the customer's name. As stated above, keep replies short.",
+  "Keep replies short. Use the customer's name. Again: keep replies short.",
+]
+quiet = [
+  "Cite the notes once per answer.",
+  "Remember the customer's name across turns.",
+  "Remember, a prime number has exactly two divisors.",
+]

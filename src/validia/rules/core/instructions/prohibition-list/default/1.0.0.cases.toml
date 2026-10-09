@@ -1,0 +1,12 @@
+# Cases for instructions/prohibition-list 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = [
+  "Never mention competitors. Never use slang. Never start a reply with \"Certainly\".",
+  "- Do not guess.\n- Never apologise.\n- Avoid jargon.",
+  "1. Do not guess.\n2. Never apologise.\n3. Avoid jargon.",
+  "Refrain from slang. No emoji. Stay away from legal advice.",
+]
+quiet = [
+  "Never guess. Answer from the notes, and say when they do not cover a question.",
+  "- Do not guess.\n- Cite the notes.\n- Avoid jargon.",
+]

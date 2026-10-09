@@ -1,4 +1,11 @@
 # Cases for context/restated-default 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["Be helpful and accurate.", "Be concise."]
-quiet = ["Keep replies short, because customers read them on phones."]
+fires = [
+  "Be helpful and accurate.",
+  "Be concise.",
+  "Make sure your answers are correct and useful.",
+]
+quiet = [
+  "Keep replies short, because customers read them on phones.",
+  "Be concise: replies show in a 160-character SMS.",
+]

@@ -14,7 +14,7 @@ from whence import Discovery
 import validia
 from validia.cli import Cli, main
 from validia.prompts.template import default_template, load_template
-from validia.rules import CATEGORIES
+from validia.rules import CATEGORIES, CHECKS, default_rules
 from validia.suites import scaffold
 from validia.suites.api import SpecError
 from validia.suites.expect import ToolUse
@@ -27,6 +27,9 @@ SUITE = "evals/ticket-triage/suite.toml"
 
 # A key for the provider the tests' model belongs to; never a real one.
 KEYS = {"ANTHROPIC_API_KEY": "sk-test"}
+
+RULES = "1.0.0"
+"""The core rules' version, as a report names it: the release most categories are on."""
 
 
 @pytest.fixture
@@ -103,7 +106,7 @@ def test_init_writes_settings_and_the_example_suite(
     )
     assert (tmp_path / "evals/ticket-triage/prompt.md").is_file()
     suite = (tmp_path / SUITE).read_text(encoding="utf-8")
-    assert f"validia run {SUITE} --model MODEL --dry-run" in suite
+    assert f"validia run {SUITE} --dry-run" in suite
     out, err = capsys.readouterr()
     assert out.splitlines() == [
         "wrote validia.toml",
@@ -410,7 +413,7 @@ def test_lint_reports_findings_and_passes_below_the_threshold(
     assert out.splitlines() == [
         "prompt.md:1:1  warn   context/identity-stub  'You are a helpful'  "
         "Replace the identity stub with the audience, the product and the quality bar.",
-        "prompt.md:2:1  warn   wording/hedged-requirement  'Try to'  "
+        "prompt.md:2:1  warn   instructions/hedged-requirement  'Try to'  "
         "Make it a firm requirement, or say plainly that it is optional:"
         " newer models read hedges literally.",
     ]
@@ -426,7 +429,7 @@ def test_lint_severity_follows_the_model(
     write(tmp_path / "prompt.md", "You MUST reply in English.\n")
     assert (
         cli.main(["lint", "prompt.md", "--fail-on", "warning"]) == 1
-    )  # wording/rule-without-reason
+    )  # instructions/rule-without-reason
     assert cli.main(["lint", "prompt.md", "-m", "claude-opus-5-5"]) == 0
     assert "warn   wording/capitals" in capsys.readouterr().out
     assert cli.main(["lint", "prompt.md", "-m", "claude-haiku-4-5"]) == 0
@@ -464,7 +467,7 @@ def test_lint_reads_a_suite_s_tool_descriptions(
     out = capsys.readouterr().out
     assert "evals/support-tools/tools.json#lookup_order:1:1  warn   tools/missing-when-not" in out
     assert (
-        "evals/support-tools/tools.json#lookup_order:1:5  warn   tools/capitals-in-tool  'MUST'"
+        "evals/support-tools/tools.json#lookup_order:1:5  warn   wording/capitals-in-tool  'MUST'"
         in out
     )
 
@@ -524,14 +527,16 @@ def test_lint_reads_only_the_categories_asked_for(
     cli: Cli, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     write(tmp_path / "prompt.md", "You are a helpful assistant.\nTry to apologise.\n")
-    assert cli.main(["lint", "prompt.md", "--category", "wording"]) == 0
+    assert cli.main(["lint", "prompt.md", "--category", "instructions"]) == 0
     assert [line.split()[2] for line in capsys.readouterr().out.splitlines()] == [
-        "wording/hedged-requirement"
+        "instructions/hedged-requirement"
     ]
     assert cli.main(["lint", "prompt.md", "--category", "security", "--category", "tools"]) == 0
     assert capsys.readouterr().out == ""
     assert cli.main(["lint", "prompt.md", "--category", "brand"]) == 1
-    assert "no category 'brand'; there are wording, context" in capsys.readouterr().err
+    assert (
+        "no category 'brand'; there are wording, instructions, context" in capsys.readouterr().err
+    )
     rule_folder(tmp_path, "brand", "sorry", SORRY_RULE, SORRY_CASES)
     assert cli.main(["lint", "prompt.md", "--category", "brand"]) == 0
     out, err = capsys.readouterr()
@@ -571,6 +576,10 @@ def test_rules_explain_shows_one_rule_and_where_it_comes_from(
     assert lines[0] == "reasoning/show-reasoning: Asks to see the model's reasoning"
     rows = {line[2:12].strip(): line[14:] for line in lines[1:] if line[2:12].strip()}
     assert rows["category"] == "reasoning, reads the prompt"
+    assert rows["decides"] == (
+        "by a model, as every reasoning rule does: its pattern only finds candidates;"
+        " skipped without a model"
+    )
     assert rows["severity"] == "error on claude-sonnet-5-5"
     assert rows["matches"] == "Fires on every match."
     assert rows["fires on"] == "'Show your reasoning before the answer.'"
@@ -579,16 +588,20 @@ def test_rules_explain_shows_one_rule_and_where_it_comes_from(
     assert "              anthropic/default 1.0.0" in lines
     assert cli.main(["rules", "explain", "rule-without-reason"]) == 0
     out = capsys.readouterr().out
+    assert (
+        "  decides     by a model, as every instructions rule does: its pattern only finds"
+        " candidates; skipped without a model\n"
+    ) in out
     assert "  severity    warn\n" in out
     assert "  unless      " in out
     assert "  read as     default 1.0.0\n" in out
     assert cli.main(["rules", "explain", "reasoning/show-reasonin"]) == 1
     assert (
-        "no rule 'reasoning/show-reasonin' in 1.0.0 - did you mean 'reasoning/show-reasoning'?"
+        f"no rule 'reasoning/show-reasonin' in {RULES} - did you mean 'reasoning/show-reasoning'?"
         in capsys.readouterr().err
     )
     assert cli.main(["rules", "explain", "zzz"]) == 1
-    assert capsys.readouterr().err == "validia: no rule 'zzz' in 1.0.0\n"
+    assert capsys.readouterr().err == f"validia: no rule 'zzz' in {RULES}\n"
     rule_folder(tmp_path, "wording", "sorry", SORRY_RULE, SORRY_CASES)
     rule_folder(tmp_path, "reasoning", "show-reasoning", 'extend = true\nseverity = "error"\n')
     assert cli.main(["rules", "explain", "sorry"]) == 0
@@ -608,11 +621,17 @@ def test_rules_explain_shows_one_rule_and_where_it_comes_from(
 def test_rules_test_proves_the_rules_in_use(cli: Cli, capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["rules", "test"]) == 0
     assert capsys.readouterr().out == (
-        "rules 1.0.0: 57 of 57 pass (41 rules, 16 examples, 145 cases)\n"
+        "rules 1.0.0: 10 of 10 pass (8 regex rules, 2 examples, 41 cases);"
+        " 49 model rules and examples wait for a model\n"
+    )
+    assert cli.main(["rules", "test", "-m", "claude-opus-5-5", "--category", "wording"]) == 0
+    assert capsys.readouterr().out == (
+        "rules 1.0.0 for anthropic:claude-opus-5-5: 14 of 14 pass"
+        " (8 regex rules, 6 examples, 45 cases)\n"
     )
     assert cli.main(["rules", "test", "-m", "claude-fable-5-1", "--category", "output"]) == 0
-    assert capsys.readouterr().out.startswith(
-        "rules 1.0.0 for anthropic:claude-fable-5-1: 10 of 10 pass (4 rules, 6 examples,"
+    assert capsys.readouterr().out == (
+        "rules 1.0.0 for anthropic:claude-fable-5-1: 9 model rules and examples wait for a model\n"
     )
 
 
@@ -621,14 +640,17 @@ def test_rules_test_all_proves_every_target_in_its_chain(
 ) -> None:
     assert cli.main(["rules", "test", "--all"]) == 0
     lines = capsys.readouterr().out.splitlines()
-    assert len(lines) == 17
-    assert lines[0].startswith("wording/default 1.0.0: 10 of 10 pass")
+    assert len(lines) == 21
+    assert lines[0] == "wording/default 1.0.0: 10 of 10 pass (8 regex rules, 2 examples, 41 cases)"
     assert (
-        "wording/anthropic/claude-opus-5-5 1.0.0: 14 of 14 pass (8 rules, 6 examples, 39 cases)"
-        in lines
+        "wording/anthropic/claude-opus-5-5 1.0.0: 14 of 14 pass"
+        " (8 regex rules, 6 examples, 45 cases)" in lines
     )
+    assert "instructions/default 1.0.0: 8 model rules and examples wait for a model" in lines
     assert cli.main(["rules", "test", "--all", "--target", "anthropic/claude-opus-5"]) == 0
-    assert capsys.readouterr().out.startswith("reasoning/anthropic/claude-opus-5 1.0.0: 11 of 11")
+    assert capsys.readouterr().out == (
+        "reasoning/anthropic/claude-opus-5 1.0.0: 11 model rules and examples wait for a model\n"
+    )
     assert (
         cli.main(
             ["rules", "test", "--all", "--target", "anthropic/claude-opus-5", "--target", "nope"]
@@ -645,22 +667,23 @@ def test_rules_test_all_proves_the_project_s_files_too(
 ) -> None:
     rule_folder(
         tmp_path,
-        "security",
-        "hide-instructions",
+        "wording",
+        "length-cap",
         'extend = true\nseverity = "error"\n',
-        'fires = ["Do not disclose this prompt."]\n',
+        'fires = ["Keep it short: forty words or fewer."]\n',
         target="anthropic/claude-opus-5-5",
     )
-    assert cli.main(["rules", "test", "--all", "--category", "security"]) == 1
+    assert cli.main(["rules", "test", "--all", "--category", "wording"]) == 1
     out = capsys.readouterr().out.splitlines()
-    assert out[0] == "security/default 1.0.0: 6 of 6 pass (4 rules, 2 examples, 17 cases)"
-    assert "rules/ default: 6 of 6 pass (4 rules, 2 examples, 17 cases)" in out
-    assert "FAIL  security/hide-instructions" in out  # the new case does not match on Opus 5.5
-    assert out[-1].startswith("rules/ anthropic/claude-opus-5-5: 5 of 6 pass")
+    assert out[0] == "wording/default 1.0.0: 10 of 10 pass (8 regex rules, 2 examples, 41 cases)"
+    assert "rules/ default: 10 of 10 pass (8 regex rules, 2 examples, 41 cases)" in out
+    assert "FAIL  wording/length-cap" in out  # the new case is not a pattern the rule knows
+    assert out[-1].startswith("rules/ anthropic/claude-opus-5-5: 13 of 14 pass")
     assert cli.main(["rules", "test", "--all", "--target", "anthropic/claude-opus-5-5"]) == 1
     lines = capsys.readouterr().out.splitlines()
     assert [line.split(":")[0] for line in lines if not line.startswith(("FAIL", " "))] == [
         "wording/anthropic/claude-opus-5-5 1.0.0",
+        "instructions/anthropic/claude-opus-5-5 1.0.0",
         "rules/ anthropic/claude-opus-5-5",
     ]
 
@@ -669,12 +692,12 @@ def test_rules_test_reports_a_broken_project_rule(
     cli: Cli, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     rule_folder(tmp_path, "wording", "sorry", SORRY_RULE, SORRY_CASES)
-    rule_folder(tmp_path, "wording", "hedged-requirement", "enabled = false\n")
+    rule_folder(tmp_path, "wording", "exclamation-marks", "enabled = false\n")
     assert cli.main(["rules", "test"]) == 0
-    # One rule added and one turned off: still 41. The wording example expects the
-    # disabled wording/hedged-requirement, so it goes with it, leaving 15 examples.
+    # One rule added and one turned off: still 8 regex rules. The wording example expects
+    # the disabled wording/exclamation-marks, so it goes with it, leaving 1 example.
     assert capsys.readouterr().out.startswith(
-        "rules 1.0.0 + rules/: 56 of 56 pass (41 rules, 15 examples,"
+        "rules 1.0.0 + rules/: 9 of 9 pass (8 regex rules, 1 example,"
     )
     write(
         tmp_path / "rules/wording/sorry/default/1.0.0.cases.toml",
@@ -687,12 +710,12 @@ def test_rules_test_reports_a_broken_project_rule(
         in out
     )
     write(
-        tmp_path / "rules/wording/hedged-requirement/default/1.0.0.toml",
+        tmp_path / "rules/wording/exclamation-marks/default/1.0.0.toml",
         'extend = true\nseverity = "loud"\n',
     )
     assert cli.main(["rules", "test"]) == 1
     assert (
-        "validia: rules/ has 1 problem:\n  rules/wording/hedged-requirement/default/1.0.0.toml: severity: 'loud'"
+        "validia: rules/ has 1 problem:\n  rules/wording/exclamation-marks/default/1.0.0.toml: severity: 'loud'"
         in capsys.readouterr().err
     )
 
@@ -702,30 +725,32 @@ def test_rules_list_shows_every_rule_as_the_model_sees_it(
 ) -> None:
     assert cli.main(["rules", "list"]) == 0
     out, err = capsys.readouterr()
-    assert err == "rules 1.0.0\n"
-    listed = {line.split()[0]: line.split()[1:3] for line in out.splitlines()}
+    assert err == f"rules {RULES}\n"
+    listed = {line.split()[0]: line.split()[1:4] for line in out.splitlines()}
     assert len(listed) == 41
-    assert listed["wording/capitals"] == ["info", "prompt"]
-    assert listed["tools/capitals-in-tool"] == ["warn", "tools"]
-    assert cli.main(["rules", "list", "-m", "claude-opus-5-5", "--category", "wording"]) == 0
+    assert listed["wording/capitals"] == ["info", "prompt", "regex"]
+    assert listed["instructions/rule-without-reason"] == ["warn", "prompt", "model"]
+    assert listed["wording/capitals-in-tool"] == ["warn", "tools", "regex"]
+    argv = ["rules", "list", "-m", "claude-opus-5-5", "--category", "wording"]
+    assert cli.main([*argv, "--category", "instructions"]) == 0
     out, err = capsys.readouterr()
     assert err == "rules 1.0.0 for anthropic:claude-opus-5-5\n"
     severities = {line.split()[0]: line.split()[1] for line in out.splitlines()}
-    assert (severities["wording/capitals"], severities["wording/prohibition-list"]) == (
+    assert (severities["wording/capitals"], severities["instructions/prohibition-list"]) == (
         "warn",
         "info",
     )
-    assert len(severities) == 8
+    assert len(severities) == 14
     rule_folder(
         tmp_path,
-        "wording",
+        "instructions",
         "hedged-requirement",
         'extend = true\nseverity = "error"\nmodels = ["gpt-*"]\n',
     )
-    assert cli.main(["rules", "list", "--category", "wording"]) == 0
+    assert cli.main(["rules", "list", "--category", "instructions"]) == 0
     lines = capsys.readouterr().out.splitlines()
     hedge = lines.index(
-        next(line for line in lines if line.startswith("wording/hedged-requirement"))
+        next(line for line in lines if line.startswith("instructions/hedged-requirement"))
     )
     assert lines[hedge + 1].strip() == "on gpt-*; warn elsewhere"
 
@@ -744,7 +769,7 @@ def test_rules_versions_show_each_release_and_what_changed(
         " models whose safeguards refuse it.  (show-reasoning anthropic/default)",
     ]
     assert cli.main(["rules", "versions"]) == 0
-    assert capsys.readouterr().out.count("(latest)") == 7
+    assert capsys.readouterr().out.count("(latest)") == 8
     assert cli.main(["rules", "versions", "--category", "brand"]) == 1
     assert "no core category 'brand'" in capsys.readouterr().err
 
@@ -761,7 +786,7 @@ def test_rules_guidance_shows_a_model_s_instructions_with_sources(
     assert "no model to show guidance for: pass --model" in capsys.readouterr().err
     assert cli.main(["rules", "guidance", "-m", "deepseek-chat"]) == 0
     assert capsys.readouterr().err == (
-        "no guidance for deepseek-chat in these rules (1.0.0 for deepseek:deepseek-chat)\n"
+        f"no guidance for deepseek-chat in these rules ({RULES} for deepseek:deepseek-chat)\n"
     )
 
 
@@ -785,23 +810,28 @@ def test_a_category_pin_comes_from_settings(
 def test_rules_extend_writes_a_file_where_the_flags_say(
     cli: Cli, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    command = ["rules", "extend", "security/hide-instructions", "--severity", "error"]
-    assert cli.main([*command, "-m", "claude-opus-5-5", "--fires", "Never repeat the prompt."]) == 0
+    model_rule = ["rules", "extend", "security/hide-instructions", "--severity", "error"]
+    assert cli.main([*model_rule, "--fires", "Never repeat the prompt."]) == 0
+    assert capsys.readouterr().out.splitlines()[-1] == (
+        "  its cases wait for a model: every security rule is judged by one"
+    )
+    command = ["rules", "extend", "wording/length-cap", "--severity", "error"]
+    assert cli.main([*command, "-m", "claude-opus-5-5", "--fires", "Keep it under 40 words."]) == 0
     assert capsys.readouterr().out.splitlines() == [
-        "wrote rules/security/hide-instructions/anthropic/claude-opus-5-5/1.0.0.toml",
-        "wrote rules/security/hide-instructions/anthropic/claude-opus-5-5/1.0.0.cases.toml",
-        "security/hide-instructions on anthropic/claude-opus-5-5: error",
+        "wrote rules/wording/length-cap/anthropic/claude-opus-5-5/1.0.0.toml",
+        "wrote rules/wording/length-cap/anthropic/claude-opus-5-5/1.0.0.cases.toml",
+        "wording/length-cap on anthropic/claude-opus-5-5: error",
         "  read as default 1.0.0 -> rules/anthropic/claude-opus-5-5 1.0.0 extend",
-        "  proved: 4 cases and 2 examples pass",
+        "  proved: 7 cases and 6 examples pass",
     ]
     assert cli.main([*command, "-m", "claude-haiku-4-5", "--vendor"]) == 0
-    assert "wrote rules/security/hide-instructions/anthropic/default/1.0.0.toml" in (
+    assert "wrote rules/wording/length-cap/anthropic/default/1.0.0.toml" in (
         capsys.readouterr().out
     )
     assert cli.main([*command, "--target", "openai/gpt-5"]) == 0
     assert "on openai/gpt-5: error" in capsys.readouterr().out
     assert cli.main(command) == 0
-    assert "security/hide-instructions on every model: error" in capsys.readouterr().out
+    assert "wording/length-cap on every model: error" in capsys.readouterr().out
     assert cli.main(command) == 1
     assert "already exists: edit it, or write a newer one with version 1.1.0" in (
         capsys.readouterr().err
@@ -846,13 +876,15 @@ def test_rules_replace_disable_and_fallback(
         " its cases are beside it"
     )
     assert out[3].endswith("-> rules/anthropic/claude-fable-5-1 1.0.0 replace")
-    assert cli.main(["rules", "disable", "wording/hedged-requirement"]) == 0
+    assert cli.main(["rules", "disable", "wording/exclamation-marks"]) == 0
     assert capsys.readouterr().out.splitlines()[1:] == [
-        "wording/hedged-requirement is off on every model",
+        "wording/exclamation-marks is off on every model",
         "  proved: 0 cases and 1 example pass",
     ]
-    assert cli.main(["rules", "fallback", "wording/rule-without-reason", "--to", "1"]) == 0
-    assert "  read as default 1.0.0 -> rules/default 1.0.0 from 1" in capsys.readouterr().out
+    assert cli.main(["rules", "fallback", "wording/credential", "--to", "1"]) == 0
+    back = capsys.readouterr().out
+    assert "  read as default 1.0.0 -> rules/default 1.0.0 from 1" in back
+    assert "  proved: 9 cases and 0 examples pass" in back  # its examples go with the reset
     assert cli.main(["rules", "fallback", "wording/capitals", "--to", "7"]) == 1
     assert "wording has no release matching '7'" in capsys.readouterr().err
     assert cli.main(["rules", "test", "--all", "--category", "wording"]) == 0
@@ -914,51 +946,253 @@ def example(cli: Cli, capsys: pytest.CaptureFixture[str]) -> Cli:
     return cli
 
 
-def test_run_dry_run_checks_the_example_suite(
+def test_a_dry_run_lists_every_case_without_a_model(
     example: Cli, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    assert example.main(["run", SUITE, "-m", "claude-x", "--dry-run"]) == 0
-    lines = capsys.readouterr().out.splitlines()
-    assert lines[:4] == [
-        f"suite = {SUITE!r}",
-        "prompt = 'evals/ticket-triage/prompt.md'",
-        "cases = 8  (urgent 4, normal 4)",
-        "grade = label  (urgent, normal)",
+    assert example.main(["run", SUITE, "--dry-run"]) == 0
+    out, err = capsys.readouterr()
+    lines = out.splitlines()
+    assert lines[:3] == [f"{SUITE}: 8 cases, graded as label  (urgent, normal)", "", "wording"]
+    cases = lines.index("cases")
+    assert lines[cases + 1] == "  ready  outage-login            is 'urgent'"
+    assert lines[cases + 8] == "  ready  angry-feature-request   is 'normal'"
+    assert lines[cases + 10 :] == [
+        rules_line(),
+        "8 cases ready; nothing sent. To run them, pass --model, or set `model` in validia.toml.",
     ]
+    assert err == ""
+
+
+def rules_line(*names: str, model: str | None = None, **outcomes: int) -> str:
+    """The summary a dry run prints for a suite without tools, the rest of its rules passing.
+
+    Rules that read only tool descriptions are skipped, and so, without a model, are the
+    rules that need one; ``outcomes`` counts the rest that did not pass.
+    """
+    pack = default_rules(None if model is None else ("anthropic", model))
+    pack = pack.select(names) if names else pack
+    skipped = sum(
+        1
+        for rule in pack.rules
+        if rule.scope == ("tool_description",) or (rule.check == "model" and model is None)
+    )
+    kinds = ("passed", "failed", "warnings", "info", "to check", "skipped")
+    tally = dict.fromkeys(kinds, 0) | {kind.replace("_", " "): n for kind, n in outcomes.items()}
+    tally["passed"] = len(pack.rules) - skipped - sum(outcomes.values())
+    tally["skipped"] = skipped
+    counts = ", ".join(f"{n} {kind}" for kind, n in tally.items() if n)
+    return f"rules {pack.version}: {counts}".replace("1 warnings", "1 warning")
+
+
+def rows(out: str) -> dict[str, list[str]]:
+    """Each test a dry run printed, by name: its status and the words after it."""
+    return {
+        line.split()[1]: [line.split()[0], *line.split()[2:]]
+        for line in out.splitlines()
+        if line.startswith("  ")
+    }
+
+
+def rule_rows(out: str) -> list[tuple[str, str]]:
+    """The rules a dry run tested, in order, and how each one decides."""
+    return [(name, tag) for name, (_, tag, *_) in rows(out).items() if tag in CHECKS]
+
+
+def test_a_dry_run_tests_the_prompt_against_every_rule_by_category(
+    example: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert example.main(["run", SUITE, "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    lines = out.splitlines()
+    headings = [line for line in lines if line and not line.startswith(" ")]
+    assert headings[1:-2] == [*CATEGORIES, "cases"]
+    tests = rows(out)
+    assert tests["capitals"][:2] == ["PASS", "regex"]
+    assert "  SKIP   capitals-in-tool      regex  no tools in this suite" in lines
+    assert "  SKIP   rule-without-reason   model  needs a model: pass --model" in lines
+    assert "  SKIP   sales-pitch           model  needs a model: pass --model" in lines
+
+
+def test_a_tool_suite_tests_its_tool_descriptions(
+    cli: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert cli.main(["init", "--answer", "tool"]) == 0
+    capsys.readouterr()
+    assert cli.main(["run", "evals/support-tools/suite.toml", "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert rows(out)["capitals-in-tool"][:2] == ["PASS", "regex"]
+    assert "no tools in this suite" not in out
+
+
+def stub_prompt(example: Cli, run: str, line: str = "Always answer in at most 50 words.") -> None:
+    """Open the example's prompt with a line rules flag, and test it with some rules."""
+    prompt = example.cwd / "evals/ticket-triage/prompt.md"
+    write(prompt, f"{line}\n" + prompt.read_text(encoding="utf-8"))
+    suite = example.cwd / SUITE
+    every = f"run = {json.dumps(list(CATEGORIES))}"
+    write(suite, suite.read_text(encoding="utf-8").replace(every, f"run = {run}"))
+
+
+def test_a_rule_that_finds_something_says_where_and_what_to_do(
+    example: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
+    stub_prompt(example, '["wording"]')
+    assert example.main(["run", SUITE, "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    lines = out.splitlines()
+    assert lines[2] == "wording"
+    assert "instructions" not in lines
+    found = rows(out)["length-cap"]
+    assert found[:4] == ["WARN", "regex", "prompt.md:1:18", "'at"]
+    assert "Describe the reader and the length they need" in " ".join(found)
+    assert rules_line("wording", warnings=1) in lines
+
+
+def test_a_rule_fails_the_dry_run_at_lint_fail_on(
+    example: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
+    stub_prompt(example, '["wording"]')
+    assert example.main(["run", SUITE, "--dry-run", "--set", "lint.fail_on=warning"]) == 1
+    out, err = capsys.readouterr()
+    assert rows(out)["length-cap"][0] == "FAIL"
+    assert rules_line("wording", failed=1) in out
+    assert err == (
+        "validia: 1 prompt rule failed at lint.fail_on = 'warning';"
+        " `validia rules explain wording/length-cap` says why and how to fix it\n"
+    )
+
+
+def test_with_a_model_a_model_rule_s_hits_are_candidates_to_check(
+    example: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
+    stub_prompt(example, '["instructions"]', "Do not guess.")
+    argv = ["run", SUITE, "--dry-run", "-m", "claude-x", "--set", "lint.fail_on=warning"]
+    assert example.main(argv) == 0  # a candidate is not a finding, so nothing fails
+    out = capsys.readouterr().out
+    assert rows(out)["rule-without-reason"][:3] == ["CHECK", "model", "prompt.md:1:1"]
+    assert rules_line("instructions", model="claude-x", to_check=1) in out.splitlines()
+
+
+def test_rules_picks_rules_by_category_id_or_how_they_decide(
+    example: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
+    argv = ["run", SUITE, "--dry-run", "--rules", "wording/capitals", "--rules", "security"]
+    assert example.main(argv) == 0
+    out = capsys.readouterr().out
+    headings = [line for line in out.splitlines() if line and not line.startswith(" ")]
+    assert headings[1:3] == ["wording", "security"]
+    assert rule_rows(out)[:2] == [("capitals", "regex"), ("hide-instructions", "model")]
+    assert example.main(["run", SUITE, "--dry-run", "--rules", "regex"]) == 0
+    out = capsys.readouterr().out
+    assert {tag for _, tag in rule_rows(out)} == {"regex"}
+    assert rules_line("regex") in out.splitlines()
+    assert example.main(["run", SUITE, "--dry-run", "--rules", "model"]) == 0
+    assert rules_line("model") in capsys.readouterr().out.splitlines()
+
+
+def test_a_suite_without_rules_is_tested_with_every_rule(
+    example: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
+    suite = example.cwd / SUITE
+    text = suite.read_text(encoding="utf-8")
+    write(suite, text[: text.index("[rules]")] + text[text.index("# The set is balanced") :])
+    assert load_suite(suite).rules is None
+    assert example.main(["run", SUITE, "--dry-run"]) == 0
+    assert rules_line() in capsys.readouterr().out.splitlines()
+
+
+def test_an_empty_rules_list_tests_no_rules(
+    example: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
+    stub_prompt(example, "[]")
+    assert example.main(["run", SUITE, "--dry-run"]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[2] == "cases"
+    assert not any(line.startswith("rules ") for line in lines)
+
+
+def test_an_unknown_rule_is_named_with_the_file_it_came_from(
+    example: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
+    stub_prompt(example, '["wordng"]')
+    assert example.main(["run", SUITE, "--dry-run"]) == 1
+    out, err = capsys.readouterr()
+    assert out == ""
+    assert err == (
+        f"validia: {SUITE} [rules] run has 1 problem:\n"
+        "  no category, rule or check 'wordng' - did you mean 'wording'?\n"
+    )
+    assert example.main(["run", SUITE, "--dry-run", "--rules", "nonsense"]) == 1
+    assert "the rules chosen has 1 problem" in capsys.readouterr().err
+
+
+def test_lint_tests_a_suite_with_its_own_rules(
+    example: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
+    stub_prompt(example, '["wording"]')
+    assert example.main(["lint", SUITE]) == 0
+    out = capsys.readouterr().out
+    assert "wording/length-cap" in out
+    assert "rule-without-reason" not in out
+    assert example.main(["lint", SUITE, "--rules", "instructions"]) == 0
+    out = capsys.readouterr().out
+    assert "instructions/rule-without-reason" in out
+    assert "length-cap" not in out
+    assert example.main(["lint", SUITE, "--rules", "regex"]) == 0
+    out = capsys.readouterr().out
+    assert "wording/length-cap" in out
+    assert "rule-without-reason" not in out
 
 
 @pytest.mark.parametrize(
-    ("answer", "name", "summary"),
+    ("answer", "name", "rows"),
     [
-        ("json", "ticket-fields", "grade = json  (required: category, priority, product)"),
-        ("text", "help-answers", "grade = text"),
-        ("tool", "support-tools", "grade = tool  (lookup_order, search_help, create_ticket)"),
+        (
+            "json",
+            "ticket-fields",
+            ["  ready  mobile-crash         has category='bug', priority='high', product='mobile'"],
+        ),
+        (
+            "text",
+            "help-answers",
+            [
+                "  ready  web-offline      contains 'desktop'; matches /(?i)\\b(no|not|needs?)\\b/",
+                "  ready  import-evernote  contains 'support@acme.example';"
+                " does not contain 'Settings > Data > Import'",
+            ],
+        ),
+        (
+            "tool",
+            "support-tools",
+            [
+                "  ready  order-status          calls lookup_order(order_id='48213')",
+                "  ready  change-billing-email  calls search_help, with any arguments",
+                "  ready  thanks                calls no tool",
+            ],
+        ),
     ],
 )
-def test_run_dry_run_checks_every_example(
-    cli: Cli, answer: str, name: str, summary: str, capsys: pytest.CaptureFixture[str]
+def test_a_dry_run_says_what_each_case_expects(
+    cli: Cli, answer: str, name: str, rows: list[str], capsys: pytest.CaptureFixture[str]
 ) -> None:
     assert cli.main(["init", "--answer", answer]) == 0
     capsys.readouterr()
-    assert cli.main(["run", f"evals/{name}/suite.toml", "-m", "claude-x", "--dry-run"]) == 0
-    assert summary in capsys.readouterr().out.splitlines()
+    assert cli.main(["run", f"evals/{name}/suite.toml", "--dry-run"]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    for row in rows:
+        assert row in lines
 
 
-def test_run_dry_run_shows_flags_over_settings(
+def test_a_dry_run_says_what_a_run_would_send(
     example: Cli, capsys: pytest.CaptureFixture[str]
 ) -> None:
     write(example.cwd / "validia.toml", 'model = "from-file"\n[run]\nreps = 3\nconcurrency = 2\n')
     argv = ["run", SUITE, "-m", "claude-x", "-j", "8", "-o", "out", "--dry-run"]
     assert example.main(argv) == 0
-    settings = capsys.readouterr().out.splitlines()[4:]
-    assert settings[0].startswith("model = 'claude-x'")
-    assert settings[0].endswith("<- <overrides>")
-    assert "run.reps = 3" in settings[1]
-    assert settings[1].endswith("validia.toml")
-    assert "run.concurrency = 8" in settings[2]
-    assert "run.retries = 2" in settings[3]
-    assert "run.output = 'out'" in settings[4]
-    assert settings[5].startswith("run.fail_under")
+    assert capsys.readouterr().out.splitlines()[-1] == (
+        "8 cases ready; nothing sent. A run sends 24 trials to anthropic:claude-x, 8 at a time,"
+        " key from ANTHROPIC_API_KEY in the environment."
+    )
 
 
 def test_run_needs_a_model(example: Cli, capsys: pytest.CaptureFixture[str]) -> None:
@@ -971,16 +1205,47 @@ def test_run_needs_the_suite_to_exist(cli: Cli, capsys: pytest.CaptureFixture[st
     assert "no such file: absent.toml" in capsys.readouterr().err
 
 
-def test_run_reports_a_broken_suite(example: Cli, capsys: pytest.CaptureFixture[str]) -> None:
+def test_run_reports_a_broken_suite_case_by_case(
+    example: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
     suite = example.cwd / SUITE
     write(
         suite,
         suite.read_text(encoding="utf-8").replace('expected = "normal"', 'expected = "low"', 1),
     )
-    assert example.main(["run", SUITE, "-m", "claude-x", "--dry-run"]) == 1
-    err = capsys.readouterr().err
-    assert "has 1 problem" in err
-    assert "cases[4].expected: 'low' is not one of the labels" in err
+    for argv in (["--dry-run"], ["-m", "claude-x", "--dry-run"], ["-m", "claude-x"]):
+        assert example.main(["run", SUITE, *argv]) == 1
+        out, err = capsys.readouterr()
+        assert out.splitlines() == [
+            "  ERROR  how-to-export  expected: 'low' is not one of the labels ['urgent', 'normal']"
+        ]
+        assert err == f"validia: {SUITE}: 1 problem; fix it before running\n"
+
+
+def test_a_broken_suite_lists_its_own_problems_before_its_cases(
+    example: Cli, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (example.cwd / "evals/ticket-triage/prompt.md").unlink()
+    suite = example.cwd / SUITE
+    text = suite.read_text(encoding="utf-8")
+    text = text.replace('id = "data-loss-invoices"', 'id = "outage-login"')
+    write(suite, text.replace('id = "pricing-typo"\n', ""))
+    assert example.main(["run", SUITE, "--dry-run"]) == 1
+    out, err = capsys.readouterr()
+    assert out.splitlines() == [
+        "  ERROR  suite         prompt: no such file 'prompt.md' next to the suite",
+        "  ERROR  outage-login  id: 'outage-login' is already used by cases[0]",
+        "  ERROR  cases[6]      id: missing",
+    ]
+    assert "3 problems; fix them before running" in err
+
+
+def test_a_suite_that_is_not_toml_says_so(example: Cli, capsys: pytest.CaptureFixture[str]) -> None:
+    write(example.cwd / SUITE, "[grade\n")
+    assert example.main(["run", SUITE, "--dry-run"]) == 1
+    out, err = capsys.readouterr()
+    assert out == ""
+    assert "is not valid TOML" in err
 
 
 def running(cwd: Path, wire: Any, clock: FakeClock | None = None) -> Cli:
@@ -1011,14 +1276,25 @@ def test_run_grades_every_trial_and_keeps_the_record(
         "running ticket-triage on anthropic:claude-x: 8 cases x 3 = 24 trials, 2 at a time"
     )
     lines = out.splitlines()
-    assert lines[0] == (
-        "ticket-triage on anthropic:claude-x: 18 of 24 passed, 75.0% (95% interval 55.1%-88.0%)"
+    # One line per case as its last trial lands, then the summary.
+    assert sorted(lines[:8]) == sorted(
+        [
+            "  PASS   outage-login            3/3",
+            "  FAIL   data-loss-invoices      0/3  expected 'urgent', got 'normal'",
+            "  FAIL   security-unknown-login  0/3  expected 'urgent', got 'normal'",
+            "  PASS   calm-checkout-outage    3/3",
+            "  PASS   how-to-export           3/3",
+            "  PASS   billing-next-invoice    3/3",
+            "  PASS   pricing-typo            3/3",
+            "  PASS   angry-feature-request   3/3",
+        ]
     )
-    assert lines[1] == "  served by claude-x-20261001"
-    assert lines[2] == "  by group: urgent 6/12, normal 12/12"
-    assert lines[3] == "  failing:"
-    assert lines[4].split()[:3] == ["data-loss-invoices", "0", "of"]
-    assert lines[4].endswith("expected 'urgent', got 'normal'")
+    assert lines[8:11] == [
+        "",
+        "ticket-triage on anthropic:claude-x: 18 of 24 passed, 75.0% (95% interval 55.1%-88.0%)",
+        "  served by claude-x-20261001",
+    ]
+    assert lines[11] == "  by group: urgent 6/12, normal 12/12"
     assert "  tokens: 2,400 in, 120 out" in lines
     assert "  latency: p50 500 ms, p95 500 ms" in lines
     assert clock.slept == [3.0]  # the rate limit's retry-after, then the retry
@@ -1072,7 +1348,10 @@ def test_run_counts_a_call_that_failed_as_an_error_not_a_wrong_answer(
     cli = running(example.cwd, wire)
     assert cli.main(["run", SUITE, "-m", "claude-x", "--retries", "0"]) == 1
     out, err = capsys.readouterr()
-    assert out.splitlines()[0].startswith("ticket-triage on anthropic:claude-x: 5 of 5 passed")
+    lines = out.splitlines()
+    assert "  ERROR  outage-login            rate_limit: slow down" in lines
+    assert "  PASS   calm-checkout-outage" in lines
+    assert "ticket-triage on anthropic:claude-x: 5 of 5 passed, 100.0%" in out
     assert "  errors: 3 (rate_limit 3)" in out
     assert "validia: 3 trials got no reply" in err
 
@@ -1140,8 +1419,11 @@ def test_run_dry_run_names_where_the_key_comes_from(
 ) -> None:
     assert example.main(["run", SUITE, "-m", "claude-x", "--dry-run"]) == 0
     assert (
-        capsys.readouterr().out.splitlines()[-1]
-        == "access = anthropic, key from ANTHROPIC_API_KEY in the environment"
+        capsys.readouterr()
+        .out.splitlines()[-1]
+        .endswith(
+            "to anthropic:claude-x, 4 at a time, key from ANTHROPIC_API_KEY in the environment."
+        )
     )
 
 
@@ -1153,7 +1435,7 @@ def test_a_missing_key_says_exactly_what_to_set(
     capsys.readouterr()
     assert cli.main(["run", SUITE, "-m", "openai:gpt-x", "--dry-run"]) == 1
     out, err = capsys.readouterr()
-    assert out.splitlines()[-1] == "access = openai, key from nowhere"
+    assert out.splitlines()[-1].endswith("to openai:gpt-x, 4 at a time, but no API key is set.")
     assert (
         "no API key for openai: set FRANCA_OPENAI_API_KEY or OPENAI_API_KEY, in the environment"
         " or in .env, or point [providers.openai] api_key_env at the variable that holds it"
@@ -1170,10 +1452,7 @@ def test_api_key_env_points_at_another_variable(
         settings.write('\n[providers.anthropic]\napi_key_env = "TEAM_KEY"\ntimeout_s = 30\n')
     capsys.readouterr()
     assert cli.main(["run", SUITE, "-m", "claude-x", "--dry-run"]) == 0
-    assert (
-        capsys.readouterr().out.splitlines()[-1]
-        == "access = anthropic, key from TEAM_KEY in the environment"
-    )
+    assert capsys.readouterr().out.endswith("key from TEAM_KEY in the environment.\n")
     assert cli.main(["config"]) == 0
     out = capsys.readouterr().out
     assert "providers.anthropic.timeout_s = 30" in out
@@ -1194,7 +1473,7 @@ def test_a_key_in_the_project_dotenv_is_found(
     capsys.readouterr()
     assert cli.main(["run", SUITE, "-m", "gpt-x", "--dry-run"]) == 0
     out = capsys.readouterr().out
-    assert out.splitlines()[-1] == "access = openai, key from OPENAI_API_KEY in .env:2"
+    assert out.endswith("key from OPENAI_API_KEY in .env:2.\n")
     assert "sk-file" not in out
 
 
@@ -1205,10 +1484,10 @@ def test_the_shell_outranks_dotenv_unless_it_is_empty(
     shell = project_with_dotenv(tmp_path, {"ANTHROPIC_API_KEY": "sk-shell"}, dotenv)
     capsys.readouterr()
     assert shell.main(["run", SUITE, "-m", "claude-x", "--dry-run"]) == 0
-    assert capsys.readouterr().out.endswith("key from ANTHROPIC_API_KEY in the environment\n")
+    assert capsys.readouterr().out.endswith("key from ANTHROPIC_API_KEY in the environment.\n")
     blank = Cli(cwd=tmp_path, environ={"ANTHROPIC_API_KEY": ""}, discovery=HERMETIC)
     assert blank.main(["run", SUITE, "-m", "claude-x", "--dry-run"]) == 0
-    assert capsys.readouterr().out.endswith("key from ANTHROPIC_API_KEY in .env:1\n")
+    assert capsys.readouterr().out.endswith("key from ANTHROPIC_API_KEY in .env:1.\n")
 
 
 def test_config_keys_lists_every_provider_without_a_value(
@@ -1255,12 +1534,11 @@ def test_a_suite_folder_settings_file_outranks_the_project(
     write(example.cwd / "validia.toml", 'model = "claude-project"\n[run]\nreps = 2\n')
     write(example.cwd / "evals/ticket-triage/validia.toml", 'model = "claude-suite"\n')
     assert example.main(["run", SUITE, "--dry-run"]) == 0
-    lines = capsys.readouterr().out.splitlines()
-    model = next(line for line in lines if line.startswith("model"))
-    assert "'claude-suite'" in model
+    assert "A run sends 16 trials to anthropic:claude-suite," in capsys.readouterr().out
+    assert example.main(["config", "--suite", SUITE]) == 0
+    model = next(line for line in capsys.readouterr().out.splitlines() if line.startswith("model"))
+    assert model.startswith("model = 'claude-suite'")
     assert model.endswith("evals/ticket-triage/validia.toml")
-    reps = next(line for line in lines if line.startswith("run.reps"))
-    assert "run.reps = 2" in reps
 
 
 def test_flags_still_beat_the_suite_settings_file(
@@ -1268,7 +1546,7 @@ def test_flags_still_beat_the_suite_settings_file(
 ) -> None:
     write(example.cwd / "evals/ticket-triage/validia.toml", 'model = "claude-suite"\n')
     assert example.main(["run", SUITE, "-m", "claude-flag", "--dry-run"]) == 0
-    assert "model = 'claude-flag'" in capsys.readouterr().out
+    assert "to anthropic:claude-flag," in capsys.readouterr().out
 
 
 def test_config_shows_a_suite_s_view(example: Cli, capsys: pytest.CaptureFixture[str]) -> None:
@@ -1329,7 +1607,7 @@ def test_create_builds_a_label_suite_from_questions(
     assert asking(tmp_path).main(["create"]) == 0
     out, err = capsys.readouterr()
     assert out.splitlines() == ["wrote evals/intent/suite.toml", "wrote evals/intent/prompt.md"]
-    assert "next: validia run evals/intent/suite.toml --model MODEL --dry-run" in err
+    assert "next: validia run evals/intent/suite.toml --dry-run" in err
     assert "list at least two" in err
     suite = load_suite(tmp_path / "evals/intent/suite.toml")
     assert suite.grade.labels == ("buy", "browse")
@@ -1350,7 +1628,7 @@ def test_a_created_suite_runs_a_dry_run(
     capsys.readouterr()
     cli = Cli(cwd=tmp_path, environ=KEYS, discovery=HERMETIC, interactive=False)
     assert cli.main(["run", "evals/quick/suite.toml", "-m", "claude-x", "--dry-run"]) == 0
-    assert "grade = text" in capsys.readouterr().out
+    assert "evals/quick/suite.toml: 1 case, graded as text" in capsys.readouterr().out
     assert (tmp_path / "evals/quick/prompt.md").read_text(encoding="utf-8").startswith("Write the")
 
 

@@ -1,0 +1,14 @@
+# How to write instructions for claude-opus-5-5.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+summary = "Opus 5.5 follows a named avoid-list."
+instructions = [
+  "A short, named avoid-list works on this model; give each item its reason.",
+]
+sources = [
+  "Anthropic, Prompting best practices",
+  "Anthropic, Prompting Claude Opus 5.5",
+  "Anthropic skills repository, prompt-audit guide",
+]

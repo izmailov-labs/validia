@@ -1,4 +1,12 @@
 # Cases for reasoning/show-reasoning 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["Show your reasoning before the answer.", "Write notes in <scratchpad> tags."]
-quiet = ["Give the answer, then one sentence on why."]
+fires = [
+  "Show your reasoning before the answer.",
+  "Write notes in <scratchpad> tags.",
+  "Show your work.",
+  "Explain your chain of thought before the answer.",
+]
+quiet = [
+  "Give the answer, then one sentence on why.",
+  "Explain the refund policy to the customer step by step.",
+]

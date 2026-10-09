@@ -1,4 +1,0 @@
-# Cases for wording/habit-to-break 1.0.0: text it must fire on, and text it must stay quiet on.
-
-fires = ["You tend to ramble, so keep it short.", "Don't be too formal."]
-quiet = ["Customers often write in a hurry, so keep replies short."]

@@ -1,0 +1,12 @@
+# Cases for instructions/completion-booster 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = [
+  "Be thorough.",
+  "Do not stop early.",
+  "Give it your all.",
+  "Go the extra mile on every answer.",
+]
+quiet = [
+  "Stop when every question in the ticket has an answer.",
+  "Don't stop until every row in the table has a label.",
+]

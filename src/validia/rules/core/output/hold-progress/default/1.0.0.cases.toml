@@ -1,4 +1,11 @@
 # Cases for output/hold-progress 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["Hold all findings until the end.", "Don't narrate."]
-quiet = ["Report what you found when you finish."]
+fires = [
+  "Hold all findings until the end.",
+  "Don't narrate.",
+  "Do not send updates while you work.",
+]
+quiet = [
+  "Report what you found when you finish.",
+  "Hold the reply until the payment check returns.",
+]

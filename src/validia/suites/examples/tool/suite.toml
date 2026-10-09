@@ -2,7 +2,7 @@
 # pick the right tool, with the right arguments, or no tool at all. Check it
 # without calling a model:
 #
-#   validia run $suite_path --model MODEL --dry-run
+#   validia run $suite_path --dry-run
 #
 # The expected answers live here and the prompt lives in its own file, so the
 # model under test only ever sees prompt.md, the tools and each case's input.
@@ -19,6 +19,14 @@ tools = "tools.json"  # the tools the model is offered: name, description, param
 # exactly; ones it leaves out, such as a free-text search query, may hold
 # anything. `tool = "none"` means the right answer is no tool call at all.
 type = "tool"
+
+[rules]
+# The prompt rules prompt.md and the tool descriptions are tested with, before any model
+# runs: `validia run --dry-run` lists each one as a test. Name categories, rule
+# ids (wording/capitals), or `regex` and `model` for how rules decide; rules
+# tagged `model` are skipped without a model. Change one rule with
+# `validia rules extend`, `replace` or `disable`.
+run = ["wording", "instructions", "context", "reasoning", "output", "tools", "security", "maintenance"]
 
 # Every tool is needed somewhere, and a third of the cases need no tool: a
 # prompt that calls a tool on every message must not pass. Tags are ordered,

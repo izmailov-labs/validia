@@ -12,10 +12,12 @@ from franca.core.clock import Clock
 from franca.core.transport import Transport
 from whence import Config, Discovery
 
+from ..rules import PROJECT_RULES, RulePack, Scope, Target, default_rules, load_rules
 from ..runs.access import (
     KeyEnvironment,
     key_source,
     key_variables,
+    parse_model,
 )
 from ..suites.suite import (
     Suite,
@@ -135,6 +137,61 @@ class CommandBase:
         """Load a suite named on the command line."""
         self._require_files([path])
         return load_suite(self.cwd / path)
+
+    @staticmethod
+    def _target(model: str | None) -> Target | None:
+        """The model rules are resolved for, as ``(provider, model)``.
+
+        Raises:
+            AccessError: If the provider cannot be told from the name.
+        """
+        if model is None:
+            return None
+        spec = parse_model(model)
+        return (spec.provider, spec.name)
+
+    def _pack(
+        self,
+        settings: Settings,
+        categories: Sequence[str] | None = None,
+        names: Sequence[str] | None = None,
+    ) -> RulePack:
+        """The rules in use for the model in settings: the core, then the project's rules/.
+
+        ``names`` picks rules by category, id or how they decide, before ``categories``
+        narrows them; both are checked against every rule in use.
+        """
+        target = self._target(settings.model)
+        pins = settings.lint.rules.pinned()
+        project = self.cwd / PROJECT_RULES
+
+        def load(kept: Sequence[str] | None) -> RulePack:
+            if project.is_dir():
+                return load_rules(project, target=target, pins=pins, categories=kept)
+            return default_rules(target, pins=pins, categories=kept)
+
+        pack = load(categories)
+        if names is None:
+            return pack
+        # Names are checked against every rule, so --category cannot hide a name's category.
+        every = load(None) if categories else pack
+        return every.select(names).only(pack.categories)
+
+    @staticmethod
+    def _suite_texts(suite: Suite, base: Path) -> list[tuple[str, str, Scope]]:
+        """A suite's texts the rules read -- its prompt, each tool's description -- named from ``base``."""
+
+        def shown(path: Path) -> str:
+            return (path.relative_to(base) if path.is_relative_to(base) else path).as_posix()
+
+        texts: list[tuple[str, str, Scope]] = [
+            (shown(suite.prompt), suite.prompt.read_text(encoding="utf-8"), "prompt")
+        ]
+        where = shown(suite.tools_file) if suite.tools_file else "tools"
+        texts += [
+            (f"{where}#{tool.name}", tool.description, "tool_description") for tool in suite.tools
+        ]
+        return texts
 
     def _interactive(self, command: str, instead: str) -> None:
         """Refuse a command that asks questions when nobody can answer them."""

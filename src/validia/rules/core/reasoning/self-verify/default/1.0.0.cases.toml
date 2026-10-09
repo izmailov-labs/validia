@@ -1,4 +1,11 @@
 # Cases for reasoning/self-verify 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["Double-check the totals.", "Before you finish, verify your answer."]
-quiet = ["Total the order lines."]
+fires = [
+  "Double-check the totals.",
+  "Before you finish, verify your answer.",
+  "Review your answer for mistakes before you send it.",
+]
+quiet = [
+  "Total the order lines.",
+  "Before you finish the reply, add the order number.",
+]

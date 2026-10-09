@@ -1,7 +1,7 @@
 # An example validia suite: the prompt under test, the cases to run it on, and
 # how to grade them. Check it without calling a model:
 #
-#   validia run $suite_path --model MODEL --dry-run
+#   validia run $suite_path --dry-run
 #
 # The expected answers live here and the prompt lives in its own file, so the
 # model under test only ever sees prompt.md and each case's input.
@@ -17,6 +17,14 @@ prompt = "prompt.md"  # the system prompt under test, relative to this file
 # ignoring case, surrounding spaces, and quotes or a full stop around it.
 type = "label"
 labels = ["urgent", "normal"]
+
+[rules]
+# The prompt rules prompt.md is tested with, before any model
+# runs: `validia run --dry-run` lists each one as a test. Name categories, rule
+# ids (wording/capitals), or `regex` and `model` for how rules decide; rules
+# tagged `model` are skipped without a model. Change one rule with
+# `validia rules extend`, `replace` or `disable`.
+run = ["wording", "instructions", "context", "reasoning", "output", "tools", "security", "maintenance"]
 
 # The set is balanced: as many normal cases as urgent ones, so a prompt that
 # answers "urgent" every time scores 50%, not 100%. Two cases are tagged

@@ -1,0 +1,7 @@
+# Cases for wording/expired-date 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = [
+  "After 2025-06, use the new endpoint.",
+  "As of 2025-03, refunds include damaged items.",
+]
+quiet = ["Use the orders endpoint."]

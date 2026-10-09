@@ -1,0 +1,9 @@
+# instructions/completion-booster, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "A completion booster"
+pattern = "be (maximally )?thorough|do not be lazy|don'?t stop early|do not stop early|don'?t stop until"
+confidence = "high"
+fix = "Remove the booster; if a reproduced early stop needs a nudge, scope it to that case."

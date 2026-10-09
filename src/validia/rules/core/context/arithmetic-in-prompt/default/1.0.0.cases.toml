@@ -4,5 +4,10 @@ fires = [
   "Award 5 points for each correct field.",
   "Give it a score of 7.",
   "Refund points: late delivery = 2.",
+  "Add up the line items and subtract the discount to get the refund.",
 ]
-quiet = ["Mark each field right or wrong."]
+quiet = [
+  "Mark each field right or wrong.",
+  "Cover the following points: delivery, refund, apology.",
+  "The refund amount is in the refund_total field.",
+]

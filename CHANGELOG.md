@@ -19,12 +19,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `validia.toml` and an example suite, asking which folder and name to use
   (`--evals` and `--name` answer without asking). An existing `validia.toml` is
   kept, so running `init` again adds another suite. `config` shows every resolved
-  setting and the flag, variable or file it came from. `run --dry-run` validates
-  the suite and prints what it would run.
+  setting and the flag, variable or file it came from. `run --dry-run` tests the
+  suite's prompt with the prompt rules -- one `PASS`, `FAIL`, `WARN`, `INFO`, `CHECK` or
+  `SKIP` per rule, grouped by category -- and lists every case and what a right reply
+  to it is, or every problem in a broken suite under the case it is in. It needs no
+  model, so a suite can be checked before one is chosen; with one, each rule is at that
+  model's severity and the last line says what a run would send and where the key
+  comes from. A rule that fails at `lint.fail_on` fails the dry run.
+- Every rule says how it decides, and its category sets it. `wording` is `regex`: what
+  the text literally holds, which a pattern decides. Every other core category is
+  `model`: what the text means, where a pattern only finds candidates. `run --dry-run`
+  skips `model` rules without a model and shows their hits as `CHECK` with one; the
+  judge that confirms them is not built yet, and `rules test` leaves their cases waiting
+  for it. `rules list` and `rules explain` show the tag.
+- `--rules` on `run` and `lint` chooses exactly which rules run: a category, a rule id,
+  or `regex` or `model`. A suite's `[rules] run` takes the same names as its default;
+  `create` and `init` write every core category, and a suite without the table is
+  tested with every rule. `describe_suite` reports it.
 - `validia run` evaluates a suite: every case, `--reps` times, sent through franca
   (Anthropic, OpenAI, Google, xAI, DeepSeek) and graded by the suite's own check.
-  It reports the pass rate with a 95% Wilson interval, results by group, the failing
-  cases with why, tokens and latency, and writes every trial to `trials.jsonl` and
+  Like a test runner, it prints a line per case as its last repetition lands --
+  `PASS`, `FAIL` with why, or `ERROR` for a call that never came back -- then the
+  pass rate with a 95% Wilson interval, results by group, tokens and latency, and writes every trial to `trials.jsonl` and
   the totals to `summary.json` under `run.output`. Retryable failures are retried
   after the provider's `Retry-After` or a backoff (`run.retries`); a call that still
   fails is an error, not a wrong answer, and fails the run, as does a pass rate under
@@ -32,6 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `selection` -- stops the run at the first one instead of sending the rest. Real HTTP is the `validia[http]` extra. Tool suites are refused
   until franca carries tools. The runner is public API (`build_model`, `run_trial`,
   `summarize`) and loop-neutral; the command line drives it on asyncio.
+- The `validia[rich]` extra colours `validia run`'s statuses and shows a progress
+  bar while trials run. It is optional: without it, and whenever output is not a
+  terminal, the lines are the same in plain text.
 - Suite files: one TOML file per suite with the prompt under test in its own file,
   and `[[cases]]` with ids, ordered tags and an `expected` answer whose shape
   follows the suite's answer type: `label`, `json` (fields, plus `required` keys),
@@ -45,9 +64,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   written until the last answer, and only if the suite loads. Every choice in
   `init`, `create` and `add` is a numbered menu that also takes the option's name.
 - `validia lint` checks prompt files, or suites' prompts and tool descriptions,
-  against the rules for a model: 41 regex rules in seven categories (`wording`,
-  `context`, `reasoning`, `output`, `tools`, `security`, `maintenance`), with
-  `--category` and `--fail-on`. Every rule has its own cases: text it must fire on
+  against the rules for a model: 41 rules in eight categories -- `wording`, whose 8
+  rules decide by pattern (capitals, `!!`, a credential, an unwrapped placeholder, a
+  date-limited instruction, an old model's name, a hard length cap, capitals in a tool
+  description), and `instructions`, `context`, `reasoning`, `output`, `tools`,
+  `security` and `maintenance`, whose 33 are about meaning -- with `--category` and
+  `--fail-on`. The cases of the meaning rules say what a judge must get right:
+  rewordings it must catch, and near-misses it must leave. Every rule has its own cases: text it must fire on
   and text it must stay quiet on. Whole before-and-after prompts list the exact
   rules each must fire, and how severe each must be on its model.
   `validia rules test` proves them, `validia rules list` shows them.

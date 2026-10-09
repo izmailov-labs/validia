@@ -88,7 +88,7 @@ def test_a_new_suite_file_reads_back() -> None:
     assert data["grade"] == {"type": "json", "required": ["a"]}
     assert data["tools"] == "tools.json"
     assert data["cases"][0]["expected"] == {"a": 1}
-    assert "#   validia run evals/x/suite.toml --model MODEL --dry-run" in text
+    assert "#   validia run evals/x/suite.toml --dry-run" in text
 
 
 def test_a_new_suite_that_does_not_load_leaves_nothing(tmp_path: Path) -> None:

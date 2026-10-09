@@ -334,13 +334,17 @@ def _keeps(
     One that names a rule a later file replaced, turned off or took from an older
     release goes; so does one that asserts the severity of a rule a later file changed,
     and one that names a rule that is gone -- retired since the example was written --
-    because a rule that is not there can no longer fire.
+    because a rule that is not there can no longer fire. So does one whose category has
+    a rule a later file replaced or brought back, named or not: that rule may now fire on
+    text the example says it leaves alone.
     """
-    if (example.fires | set(example.counts)) & set(removed):
+    named = example.fires | set(example.counts)
+    if named & set(removed):
         return False
-    for rule in example.fires | set(example.counts):
-        if any(later > rank and change == "reset" for later, change in history.get(rule, ())):
-            return False
+    for rule, changes in history.items():
+        if rule in removed or not any(later > rank and c == "reset" for later, c in changes):
+            continue
+        return False
     for rule in example.severities:
         if any(later > rank for later, _ in history.get(rule, ())):
             return False

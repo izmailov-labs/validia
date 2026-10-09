@@ -1,4 +1,12 @@
 # Cases for context/do-not-hallucinate 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["Do not hallucinate.", "Don't make things up."]
-quiet = ["When the notes do not cover a question, say so and suggest writing to support."]
+fires = [
+  "Do not hallucinate.",
+  "Don't make things up.",
+  "Never fabricate facts.",
+  "Avoid making up information.",
+]
+quiet = [
+  "When the notes do not cover a question, say so and suggest writing to support.",
+  "Do not make things up: when the notes do not cover a question, say so and point to support.",
+]

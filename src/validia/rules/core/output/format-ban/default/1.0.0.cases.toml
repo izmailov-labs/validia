@@ -1,4 +1,13 @@
 # Cases for output/format-ban 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["Never use bullets.", "No headers.", "Never use bullet points."]
-quiet = ["Write the reply as two short paragraphs."]
+fires = [
+  "Never use bullets.",
+  "No headers.",
+  "Never use bullet points.",
+  "Do not use bullet points.",
+  "Avoid markdown formatting entirely.",
+]
+quiet = [
+  "Write the reply as two short paragraphs.",
+  "The CSV export has no headers.",
+]

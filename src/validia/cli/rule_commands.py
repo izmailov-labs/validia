@@ -15,16 +15,13 @@ from ..rules import (
     Guidance,
     Rule,
     RuleCheck,
-    RulePack,
     Scope,
-    Target,
+    check_for,
     core_categories,
     core_releases,
     core_targets,
     core_versions,
-    default_rules,
     lint_text,
-    load_rules,
     verify_core,
     verify_project,
     verify_rules,
@@ -42,13 +39,14 @@ from ..runs.access import (
     parse_model,
 )
 from ..suites.suite import (
+    Suite,
     load_suite,
 )
 from .common import CliError, CommandBase, Commands, _count
 from .interview import (
     regex_problem,
 )
-from .settings import SETTINGS_FILE, Settings
+from .settings import SETTINGS_FILE
 
 _NEEDED = "an answer is needed"
 
@@ -140,6 +138,16 @@ class RuleCommands(CommandBase):
             "--no-guidance",
             action="store_true",
             help="leave out the model's instructions for the categories with findings",
+        )
+        lint.add_argument(
+            "--rules",
+            action="append",
+            metavar="NAME",
+            help=(
+                "only these rules: a category, a rule id (wording/capitals), or regex or"
+                " model for how rules decide; repeat for more (default: a suite's"
+                " [rules] run)"
+            ),
         )
         lint.set_defaults(handler=self._lint)
 
@@ -281,27 +289,6 @@ class RuleCommands(CommandBase):
         )
         new.set_defaults(handler=self._rules_new)
 
-    @staticmethod
-    def _target(model: str | None) -> Target | None:
-        """The model rules are resolved for, as ``(provider, model)``.
-
-        Raises:
-            AccessError: If the provider cannot be told from the name.
-        """
-        if model is None:
-            return None
-        spec = parse_model(model)
-        return (spec.provider, spec.name)
-
-    def _pack(self, settings: Settings, categories: Sequence[str] | None = None) -> RulePack:
-        """The rules in use for the model in settings: the core, then the project's rules/."""
-        target = self._target(settings.model)
-        pins = settings.lint.rules.pinned()
-        project = self.cwd / PROJECT_RULES
-        if project.is_dir():
-            return load_rules(project, target=target, pins=pins, categories=categories)
-        return default_rules(target, pins=pins, categories=categories)
-
     def _lint(self, args: argparse.Namespace, argv: Sequence[str]) -> int:
         """Check prompts, or suites' prompts and tools, against the rules for a model."""
         self._require_files(args.targets)
@@ -314,12 +301,15 @@ class RuleCommands(CommandBase):
         for target in args.targets:
             is_suite = target.suffix == ".toml"
             _, settings = self._settings(args, argv, flags, suite=target if is_suite else None)
-            pack = self._pack(settings, args.category)
+            suite = load_suite(self.cwd / target) if is_suite else None
+            # --rules, else the suite's [rules] run, picks the rules; --category narrows them.
+            names = args.rules or (suite.rules if suite is not None else None)
+            pack = self._pack(settings, args.category, names)
             versions.add(pack.version)
             owner = {rule.id: rule.category for rule in pack.rules}
             threshold = SEVERITIES.index("warn" if settings.lint.fail_on == "warning" else "error")
             hit: set[str] = set()
-            for location, text, scope in self._lint_texts(target, is_suite):
+            for location, text, scope in self._lint_texts(target, suite):
                 for finding in lint_text(text, pack, scope=scope):
                     totals[finding.severity] += 1
                     failing += SEVERITIES.index(finding.severity) >= threshold
@@ -347,20 +337,12 @@ class RuleCommands(CommandBase):
         print(f"rules {', '.join(sorted(versions))}: {summary}", file=sys.stderr)
         return 1 if failing else 0
 
-    def _lint_texts(self, target: Path, is_suite: bool) -> list[tuple[str, str, Scope]]:
+    def _lint_texts(self, target: Path, suite: Suite | None) -> list[tuple[str, str, Scope]]:
         """The texts to check for one target: a prompt, or a suite's prompt and tools."""
-        if not is_suite:
+        if suite is None:
             path = self.cwd / target
             return [(self._shown(path), path.read_text(encoding="utf-8"), "prompt")]
-        suite = load_suite(self.cwd / target)
-        texts: list[tuple[str, str, Scope]] = [
-            (self._shown(suite.prompt), suite.prompt.read_text(encoding="utf-8"), "prompt")
-        ]
-        where = self._shown(suite.tools_file) if suite.tools_file else "tools"
-        texts += [
-            (f"{where}#{tool.name}", tool.description, "tool_description") for tool in suite.tools
-        ]
-        return texts
+        return self._suite_texts(suite, self.cwd)
 
     def _rules_list(self, args: argparse.Namespace, argv: Sequence[str]) -> int:
         """Show every rule in use, with its severity on the model when one is given."""
@@ -374,7 +356,7 @@ class RuleCommands(CommandBase):
             scope = "tools" if rule.scope == ("tool_description",) else "prompt"
             print(
                 f"{rule.id:<{width}}  {rule.severity_for(pack.model):<5}  "
-                f"{scope:<6}  {rule.title or rule.fix}"
+                f"{scope:<6}  {rule.check:<5}  {rule.title or rule.fix}"
             )
             if rule.models and pack.model is None:
                 print(f"{'':<{width}}  on {', '.join(rule.models)}; {rule.otherwise} elsewhere")
@@ -411,6 +393,9 @@ class RuleCommands(CommandBase):
             severity = rule.describe_severity(written.pack.model if one_model else None)
             print(f"{name} on {on}: {severity}")
             print(f"  read as {' -> '.join(rule.origin)}")
+        if check_for(rule_id[0]) == "model":
+            print(f"  its cases wait for a model: every {rule_id[0]} rule is judged by one")
+            return 0
         cases = sum(check.cases for check in written.checks if check.name == name)
         examples = sum(1 for check in written.checks if check.name != name)
         print(f"  proved: {_count(cases, 'case')} and {_count(examples, 'example')} pass")
@@ -551,6 +536,13 @@ class RuleCommands(CommandBase):
         on = f" on {settings.model}" if pack.model else ""
         rows = [
             ("category", f"{rule.category}, reads {scope}"),
+            (
+                "decides",
+                f"by a model, as every {rule.category} rule does: its pattern only finds"
+                " candidates; skipped without a model"
+                if rule.check == "model"
+                else "by its pattern alone (regex); runs without a model",
+            ),
             ("severity", f"{rule.describe_severity(pack.model)}{on}"),
             ("fix", rule.fix),
             ("matches", rule.describe_matching()),
@@ -600,11 +592,20 @@ class RuleCommands(CommandBase):
         failed = 0
         for name, pack, checks in proved:
             failed += _print_failures(checks)
-            passed = sum(check.passed for check in checks)
-            cases = sum(check.cases for check in checks)
+            ran = [check for check in checks if not check.waiting]
+            passed = sum(check.passed for check in ran)
+            cases = sum(check.cases for check in ran)
+            regex = sum(1 for rule in pack.rules if rule.check == "regex")
+            examples = sum(1 for check in ran) - regex
+            waiting = len(checks) - len(ran)
+            wait = f"{waiting} model rules and examples wait for a model"
+            if not ran:
+                print(f"{name}: {wait}")
+                continue
             print(
-                f"{name}: {passed} of {len(checks)} pass"
-                f" ({len(pack.rules)} rules, {len(pack.examples)} examples, {cases} cases)"
+                f"{name}: {passed} of {len(ran)} pass"
+                f" ({_count(regex, 'regex rule')}, {_count(examples, 'example')},"
+                f" {_count(cases, 'case')})" + (f"; {wait}" if waiting else "")
             )
         return 1 if failed else 0
 

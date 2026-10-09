@@ -2,7 +2,7 @@
 
 from collections import Counter
 
-from .model import Finding, RuleCheck, RulePack, Scope
+from .model import Finding, RuleCheck, RulePack, Scope, check_for
 
 
 def lint_text(
@@ -34,7 +34,9 @@ def verify_rules(pack: RulePack) -> list[RuleCheck]:
     """Prove every rule against its own cases, then every example.
 
     An example is linted with its own category's rules, as its own model sees them, so
-    a layer's examples prove the severities that layer sets.
+    a layer's examples prove the severities that layer sets. A ``model`` rule's cases,
+    and the examples of a category of them, wait for a model: they say what the text
+    means, and a pattern is not held to that.
 
     Args:
         pack: The rules.
@@ -44,11 +46,17 @@ def verify_rules(pack: RulePack) -> list[RuleCheck]:
     """
     checks: list[RuleCheck] = []
     for rule in pack.rules:
+        if rule.check == "model":
+            checks.append(RuleCheck(rule.id, (), 0, rule.category, waiting=True))
+            continue
         failures = [f"should fire on: {case!r}" for case in rule.fires if not rule.scan(case)]
         failures += [f"should stay quiet on: {case!r}" for case in rule.quiet if rule.scan(case)]
         cases = len(rule.fires) + len(rule.quiet)
         checks.append(RuleCheck(rule.id, tuple(failures), cases, rule.category))
     for example in pack.examples:
+        if check_for(example.category) == "model":
+            checks.append(RuleCheck(example.name, (), 0, example.category, waiting=True))
+            continue
         scoped = pack.only([example.category]) if example.category else pack
         found = lint_text(example.text, scoped, model=example.model, scope=example.scope)
         fired = Counter(finding.rule for finding in found)

@@ -6,6 +6,7 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 
+from validia.rules import CATEGORIES
 from validia.suites import scaffold
 from validia.suites.expect import NO_TOOL, Fields, Label, Reply, TextChecks, ToolCall, ToolUse
 from validia.suites.suite import (
@@ -105,9 +106,8 @@ def test_every_example_suite_loads(tmp_path: Path, answer: AnswerType) -> None:
     assert suite.prompt == tmp_path / "prompt.md"
     assert len(suite.cases) >= 6
     assert suite.description
-    assert "validia run suite.toml --model MODEL --dry-run" in suite.path.read_text(
-        encoding="utf-8"
-    )
+    assert "validia run suite.toml --dry-run" in suite.path.read_text(encoding="utf-8")
+    assert suite.rules == CATEGORIES  # every core category, spelled out to edit
 
 
 @pytest.mark.parametrize("answer", ["label", "json", "tool"])
@@ -423,3 +423,41 @@ def test_a_valid_tool_case(tmp_path: Path) -> None:
     assert suite.cases[0].expected == ToolUse("lookup_order", {"order_id": "1"})
     assert suite.tools[0].name == "lookup_order"
     assert suite.tools[0].strict is None
+
+
+# ------------------------------------------------------------------ [rules]
+
+
+def test_without_rules_every_category_applies(tmp_path: Path) -> None:
+    assert load_suite(suite_file(tmp_path, VALID)).rules is None
+
+
+@pytest.mark.parametrize(
+    ("table", "rules"),
+    [
+        (
+            '[rules]\nrun = ["wording", "wording/credential", "regex"]\n',
+            ("wording", "wording/credential", "regex"),
+        ),
+        ("[rules]\nrun = []\n", ()),
+        ("[rules]\n", None),
+    ],
+)
+def test_rules_name_the_rules_to_test_with(
+    tmp_path: Path, table: str, rules: tuple[str, ...] | None
+) -> None:
+    text = VALID.replace("[[cases]]", f"{table}\n[[cases]]")
+    assert load_suite(suite_file(tmp_path, text)).rules == rules
+
+
+@pytest.mark.parametrize(
+    ("table", "problem"),
+    [
+        ('rules = "wording"\n', "rules: expected a table"),
+        ("[rules]\nrun = [1]\n", "rules.run: expected a list of non-empty strings"),
+        ('[rules]\nruns = ["wording"]\n', "rules.runs: no such field - did you mean 'run'?"),
+    ],
+)
+def test_a_malformed_rules_table_is_a_problem(tmp_path: Path, table: str, problem: str) -> None:
+    text = VALID.replace("[grade]", f"{table}\n[grade]")
+    assert problem in problems(suite_file(tmp_path, text))

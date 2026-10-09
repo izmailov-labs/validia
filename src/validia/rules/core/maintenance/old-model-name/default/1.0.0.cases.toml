@@ -1,4 +1,0 @@
-# Cases for maintenance/old-model-name 1.0.0: text it must fire on, and text it must stay quiet on.
-
-fires = ["This prompt was tuned for claude-3-opus.", "Unlike 3.5, keep replies short."]
-quiet = ["This prompt targets the current Sonnet."]

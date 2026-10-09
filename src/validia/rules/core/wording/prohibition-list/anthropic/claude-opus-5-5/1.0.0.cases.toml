@@ -1,4 +1,0 @@
-# Cases for wording/prohibition-list 1.0.0: text it must fire on, and text it must stay quiet on.
-
-fires = ["Avoid jargon. Avoid emoji. Avoid exclamation marks."]
-quiet = ["Write plainly, because customers read on their phones."]

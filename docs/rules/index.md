@@ -31,7 +31,7 @@ site is built, so they always match the rules `validia lint` reads.
 ```
 $ validia lint evals/billing/prompt.md -m claude-sonnet-5-5
 evals/billing/prompt.md:2:1  info   wording/capitals  'NEVER'  State the one real constraint plainly, ...
-evals/billing/prompt.md:2:1  warn   wording/rule-without-reason  'NEVER'  Give the reason (because ..., so that ...): ...
+evals/billing/prompt.md:2:1  warn   instructions/rule-without-reason  'NEVER'  Give the reason (because ..., so that ...): ...
 evals/billing/prompt.md:3:1  error  reasoning/show-reasoning  'Show your reasoning'  Remove it: these models refuse ...
 wording/anthropic/default 1.0.0: Current Claude models follow a plain instruction with its reason ...
   - Give the reason with the rule: Claude generalises from the reason to cases the rule never names.
@@ -49,12 +49,24 @@ out), a pointer to the most severe finding's rule, and the summary.
 |---|---|---|
 | `-m MODEL` | `model` | the model the prompt is for; see [choosing the model](#choosing-the-model) |
 | `--fail-on {error,warning}` | `lint.fail_on` | the lowest severity that makes the command exit 1; `error` by default |
+| `--rules NAME` | a suite's `[rules] run` | only these rules: a category, a rule id (`wording/capitals`), or `regex` or `model` for how rules decide; repeat for more |
 | `--category NAME` | | only this category's rules; repeat for more |
 | `--no-guidance` | | leave the model's writing guidance out |
 
 There are three severities. `error` is for text that must not ship: a credential, or a
 request the model refuses. `warn` is for text that usually makes the prompt worse, and
 `info` for a habit worth knowing about.
+
+Every rule also says how it decides, and its category sets it. `wording` rules are
+`regex`: they look at what the text literally holds -- capitals, a leaked key, a date, a
+placeholder with no tags, an old model's name, a number of words -- and a pattern decides.
+Rules in every other category are `model`: a rule given without its reason, a hedge, an
+identity stub, a request to plan are about meaning, so a pattern only finds candidates,
+for a model to judge. A project's own category is `regex`. `validia rules list` shows
+which is which. In `validia run --dry-run`, `model` rules are skipped without a model, and
+with one their hits are `CHECK`: candidates, not findings, until the judge that confirms
+them is built. Their cases say what the text means, so `validia rules test` proves them
+only once that judge exists; until then they wait.
 
 ## Choosing the model
 
