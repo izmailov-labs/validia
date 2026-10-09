@@ -1,8 +1,9 @@
 # Cases for context/special-cases 1.0.0: text it must fire on, and text it must stay quiet on.
 
 fires = [
-  '''If the user asks for a refund, check the order.
-If the user is angry, apologise once.
-If the customer mentions a competitor, stay neutral.''',
+  "If the user asks for a refund, check the order.\nIf the user is angry, apologise once.\nIf the customer mentions a competitor, stay neutral.",
+  "When a customer wants a refund, check the order.\nWhen a customer is angry, apologise once.\nWhen a customer mentions a competitor, stay neutral.",
 ]
-quiet = ["If the user asks for a refund, check the order first."]
+quiet = [
+  "If the user asks for a refund, check the order first.",
+]

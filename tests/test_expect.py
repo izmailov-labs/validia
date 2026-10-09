@@ -174,3 +174,25 @@ def test_an_empty_reply_always_fails(expected: Label | Fields | TextChecks | Too
     case = Case(id="c", input="hi", expected=expected)
     verdict = case.check(Reply(text="  \n"))
     assert verdict == verdict.__class__(passed=False, reason="empty reply")
+
+
+@pytest.mark.parametrize(
+    ("expected", "described"),
+    [
+        (Label("urgent"), "is 'urgent'"),
+        (Fields({"category": "bug"}, required=("id",)), "has category='bug'"),
+        (Fields(required=("id", "name")), "is a JSON object with id, name"),
+        (TextChecks(equals="Yes."), "is 'Yes.'"),
+        (
+            TextChecks(contains=("a", "b"), not_contains=("c",), matches=r"\d+"),
+            r"contains 'a', 'b'; does not contain 'c'; matches /\d+/",
+        ),
+        (ToolUse("lookup", {"id": 7}), "calls lookup(id=7)"),
+        (ToolUse("search"), "calls search, with any arguments"),
+        (ToolUse(NO_TOOL), "calls no tool"),
+    ],
+)
+def test_each_check_says_what_a_right_reply_is(
+    expected: Label | Fields | TextChecks | ToolUse, described: str
+) -> None:
+    assert expected.describe() == described

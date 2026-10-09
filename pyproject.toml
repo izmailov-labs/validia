@@ -33,6 +33,10 @@ dependencies = [
 # Real HTTP for `validia run`. Behind an extra so the offline paths -- lint, check,
 # scripted transports -- never pull an HTTP client into a consumer's environment.
 http = ["franca[http]>=0.1.1,<1"]
+# Colour and a progress bar for `validia run`. Behind an extra so a library user who
+# only imports validia never pulls a terminal UI in; without it the output is the
+# same lines in plain text.
+rich = ["rich>=15,<16"]
 
 [project.scripts]
 validia = "validia.cli:main"
@@ -63,6 +67,8 @@ dev = [
   "pytest>=9.1.1",
   "pytest-asyncio>=1.4",
   "pytest-cov>=7.1",
+  # The `rich` extra, so the tests cover the coloured output as well as the plain one.
+  "rich>=15,<16",
   # Ruff has no 1.0 and does not follow semver below it: a minor bump can change
   # which rules fire. Pinned exactly so lint results only change deliberately.
   "ruff==0.16.6",

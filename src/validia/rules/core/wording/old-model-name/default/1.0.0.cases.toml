@@ -1,0 +1,13 @@
+# Cases for wording/old-model-name 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = [
+  "This prompt was tuned for claude-3-opus.",
+  "Compatible with Claude 2.1.",
+  "Unlike Claude 3.5 Sonnet, keep replies short.",
+  "Written for gpt-3.5-turbo.",
+]
+quiet = [
+  "This prompt targets the current Sonnet.",
+  "Round prices like 3.5 up to 4.",
+  "Python 3.7 is the oldest version we support.",
+]

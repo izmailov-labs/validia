@@ -1,0 +1,14 @@
+# Cases for instructions/hedged-requirement 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = [
+  "Try to include a summary.",
+  "Add a summary if possible.",
+  "It would be nice to include a summary.",
+  "Perhaps mention the delivery date.",
+]
+quiet = [
+  "Include a summary.",
+  "Optionally, add a summary when the reply is long.",
+  "If the order has shipped, include the tracking link.",
+  "Customers who try to log in from a new device get a code by email.",
+]

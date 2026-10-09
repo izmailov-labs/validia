@@ -1,0 +1,12 @@
+# Cases for wording/length-cap 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = [
+  "Answer in at most 50 words.",
+  "Send an update every 5 tool calls.",
+  "Keep it to no more than 80 words.",
+  "Maximum of 3 sentences.",
+]
+quiet = [
+  "Answer in a short paragraph.",
+  "Customers wait at most 5 days for a refund.",
+]

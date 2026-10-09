@@ -1,5 +1,4 @@
-# How to write wording for openai models: what the layers
-# beside it encode as rules, said as instructions.
+# How to write wording for openai models.
 
 released = "2026-10-07"
 changes = ["First release."]
@@ -8,6 +7,8 @@ summary = "Over-triggering on emphasis is documented for GPT-4.1 and GPT-5; Open
 instructions = [
   "On GPT-4.1 and GPT-5, write requirements plainly instead of in capitals.",
   "The vendors disagree on emphasis: decide by an experiment on your route, not by the rule alone.",
-  "Hedges ('try to', 'if possible') are read literally by GPT-4.1 and GPT-5: make each firm or plainly optional.",
 ]
-sources = ["OpenAI, GPT-4.1 prompting guide", "OpenAI cookbook, GPT-5 prompt optimizer"]
+sources = [
+  "OpenAI, GPT-4.1 prompting guide",
+  "OpenAI cookbook, GPT-5 prompt optimizer",
+]

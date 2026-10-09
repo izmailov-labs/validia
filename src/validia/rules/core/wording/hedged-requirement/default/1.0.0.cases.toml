@@ -1,4 +1,0 @@
-# Cases for wording/hedged-requirement 1.0.0: text it must fire on, and text it must stay quiet on.
-
-fires = ["Try to include a summary.", "Add a summary if possible."]
-quiet = ["Include a summary.", "Optionally, add a summary when the reply is long."]

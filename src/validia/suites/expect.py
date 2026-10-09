@@ -96,6 +96,11 @@ def _same(got: Any, want: Any) -> bool:
     return bool(got == want)
 
 
+def _assignments(values: dict[str, Any]) -> str:
+    """Render fields or arguments as ``key='value'`` pairs, for a description."""
+    return ", ".join(f"{key}={value!r}" for key, value in values.items())
+
+
 def _mismatches(got: dict[str, Any], want: dict[str, Any], skip: tuple[str, ...] = ()) -> list[str]:
     """List every listed key that is missing or holds another value."""
     problems: list[str] = []
@@ -121,6 +126,10 @@ class Label:
     """
 
     value: str
+
+    def describe(self) -> str:
+        """Say what a right reply is, as ``run --dry-run`` lists each case."""
+        return f"is {self.value!r}"
 
     def check(self, reply: Reply) -> Verdict:
         """Check a reply.
@@ -151,6 +160,12 @@ class Fields:
 
     values: dict[str, Any] = field(default_factory=dict)
     required: tuple[str, ...] = ()
+
+    def describe(self) -> str:
+        """Say what a right reply is, as ``run --dry-run`` lists each case."""
+        if self.values:
+            return f"has {_assignments(self.values)}"
+        return f"is a JSON object with {', '.join(self.required)}"
 
     def check(self, reply: Reply) -> Verdict:
         """Check a reply.
@@ -197,6 +212,19 @@ class TextChecks:
     not_contains: tuple[str, ...] = ()
     matches: str = ""
 
+    def describe(self) -> str:
+        """Say what a right reply is, as ``run --dry-run`` lists each case."""
+        said: list[str] = []
+        if self.equals:
+            said.append(f"is {self.equals!r}")
+        if self.contains:
+            said.append(f"contains {', '.join(map(repr, self.contains))}")
+        if self.not_contains:
+            said.append(f"does not contain {', '.join(map(repr, self.not_contains))}")
+        if self.matches:
+            said.append(f"matches /{self.matches}/")
+        return "; ".join(said)
+
     def check(self, reply: Reply) -> Verdict:
         """Check a reply.
 
@@ -236,6 +264,14 @@ class ToolUse:
 
     tool: str
     args: dict[str, Any] = field(default_factory=dict)
+
+    def describe(self) -> str:
+        """Say what a right reply is, as ``run --dry-run`` lists each case."""
+        if self.tool == NO_TOOL:
+            return "calls no tool"
+        if not self.args:
+            return f"calls {self.tool}, with any arguments"
+        return f"calls {self.tool}({_assignments(self.args)})"
 
     def check(self, reply: Reply) -> Verdict:
         """Check a reply.

@@ -1,0 +1,10 @@
+# instructions/rule-without-reason, for every model.
+
+released = "2026-10-07"
+changes = ["First release."]
+
+title = "A rule without its reason"
+pattern = '''(\b(always|never|must)\b|(^|[.;!?]\s+)\s*[-*]?\s*(do not|don't)\b)(?![^.!?\n]*:\s+\w)'''
+unless = '\b(because|so that|since|otherwise|which means|to avoid)\b'
+judge = "reason"
+fix = "Give the reason (because ..., so that ...): a rule with its reason covers cases it never names."

@@ -1,14 +1,9 @@
 # Cases for context/bullet-wall 1.0.0: text it must fire on, and text it must stay quiet on.
 
 fires = [
-  '''- Be empathetic
-- Be concise
-- Check the policy
-- Escalate if the customer is angry''',
+  "- Be empathetic\n- Be concise\n- Check the policy\n- Escalate if the customer is angry",
 ]
 quiet = [
-  '''- Be empathetic
-- Be concise
-
-Check the policy before you answer.''',
+  "- Be empathetic\n- Be concise\n\nCheck the policy before you answer.",
+  "Opening hours:\n- Monday: 9-17\n- Tuesday: 9-17\n- Wednesday: 9-17\n- Thursday: 9-17",
 ]

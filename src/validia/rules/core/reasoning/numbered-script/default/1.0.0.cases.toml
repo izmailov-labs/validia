@@ -1,4 +1,10 @@
 # Cases for reasoning/numbered-script 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["STEP 1: read the ticket. STEP 2: classify it."]
-quiet = ["Read the ticket, then classify it."]
+fires = [
+  "STEP 1: read the ticket. STEP 2: classify it.",
+  "First, decide how urgent the ticket is. Second, choose its category. Third, write the reply.",
+]
+quiet = [
+  "Read the ticket, then classify it.",
+  "To issue a refund: step 1, check the order; step 2, call refund_order.",
+]

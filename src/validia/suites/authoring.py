@@ -9,7 +9,7 @@ file is put back exactly as it was.
 
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -111,6 +111,7 @@ def suite_toml(
     run: str,
     description: str = "",
     tools: str = "",
+    rules: Sequence[str] = (),
 ) -> str:
     """Render a new suite file, laid out like the examples ``init`` writes.
 
@@ -121,6 +122,8 @@ def suite_toml(
         run: The suite's path as the user types it, for the header's run command.
         description: What the suite measures.
         tools: The tools file, relative to the suite, for a ``tool`` suite.
+        rules: The prompt rules to test the prompt with, written as ``[rules] run``;
+            when none are given, the table is left out and every rule applies.
 
     Returns:
         The file's text.
@@ -129,7 +132,7 @@ def suite_toml(
         "# A validia suite: the prompt under test, the cases to run it on, and how",
         "# to grade them. Check it without calling a model:",
         "#",
-        f"#   validia run {run} --model MODEL --dry-run",
+        f"#   validia run {run} --dry-run",
         "#",
         "# Add cases with `validia add`, test a check with `validia check`.",
         "",
@@ -144,6 +147,15 @@ def suite_toml(
         lines.append(f"labels = {toml_value(list(grade.labels))}")
     if grade.required:
         lines.append(f"required = {toml_value(list(grade.required))}")
+    if rules:
+        lines += [
+            "",
+            "[rules]",
+            "# The prompt rules the prompt is tested with, before any model runs: categories,",
+            "# rule ids (wording/capitals), or `regex` and `model` for how rules decide. Rules",
+            "# tagged `model` are skipped without a model. Change one with `validia rules extend`.",
+            f"run = {toml_value(list(rules))}",
+        ]
     return "\n".join(lines) + "\n\n" + "\n".join(cases)
 
 

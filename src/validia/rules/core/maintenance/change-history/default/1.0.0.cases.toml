@@ -4,5 +4,10 @@ fires = [
   "The search tool now works differently.",
   "We no longer offer phone support.",
   "Refunds now work differently.",
+  "We used to offer phone support, but now it is email only.",
 ]
-quiet = ["Refunds go back to the original card."]
+quiet = [
+  "Refunds go back to the original card.",
+  "Use the orders API instead of guessing.",
+  "Keep replies no longer than a short paragraph.",
+]

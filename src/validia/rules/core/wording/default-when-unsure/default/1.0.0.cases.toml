@@ -1,4 +1,0 @@
-# Cases for wording/default-when-unsure 1.0.0: text it must fire on, and text it must stay quiet on.
-
-fires = ["If in doubt, use the search tool.", "Default to calling the search tool."]
-quiet = ["Use the search tool for questions about how the shop works."]

@@ -1,4 +1,0 @@
-# Cases for wording/completion-booster 1.0.0: text it must fire on, and text it must stay quiet on.
-
-fires = ["Be thorough.", "Do not stop early."]
-quiet = ["Stop when every question in the ticket has an answer."]

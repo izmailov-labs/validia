@@ -1,0 +1,11 @@
+# Cases for instructions/default-when-unsure 1.0.0: text it must fire on, and text it must stay quiet on.
+
+fires = [
+  "If in doubt, use the search tool.",
+  "Default to calling the search tool.",
+  "When you are not sure, just call search.",
+]
+quiet = [
+  "Use the search tool for questions about how the shop works.",
+  "The currency field should default to USD.",
+]

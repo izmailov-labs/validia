@@ -9,6 +9,9 @@ case's ``expected`` takes the shape that type calls for::
     type = "label"                  # label, json or text
     labels = ["urgent", "normal"]
 
+    [rules]
+    run = ["wording", "wording/credential"]  # prompt rules to test it with; every one when absent
+
     [[cases]]
     id = "outage-login"
     tags = ["urgent", "outage"]     # ordered; results are grouped by the first
@@ -45,7 +48,7 @@ import json
 import re
 import tomllib
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, NoReturn, get_args
@@ -87,12 +90,23 @@ class SuiteError(ValueError):
 
     Attributes:
         problems: One line per problem, for a caller that reports them as data.
+        cases: The problems that belong to one case, by its id (``cases[N]`` for one
+            without an id), without the ``cases[N].`` prefix, in file order.
+        general: The problems that belong to no one case: the prompt, the grader,
+            the tools.
     """
 
-    def __init__(self, message: str, problems: Sequence[str] = ()) -> None:
+    def __init__(
+        self,
+        message: str,
+        problems: Sequence[str] = (),
+        cases: Mapping[str, Sequence[str]] | None = None,
+    ) -> None:
         """Keep the problems beside the rendered message."""
         super().__init__(message)
         self.problems = list(problems) or [message]
+        self.cases = {case: list(found) for case, found in (cases or {}).items()}
+        self.general = [problem for problem in self.problems if not problem.startswith("cases[")]
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,6 +187,9 @@ class Suite:
         description: What the suite measures.
         tools: The tools the model is offered, if any.
         tools_file: The file they were read from.
+        rules: The prompt rules the prompt is tested against, as ``[rules] run``
+            names them -- categories, rule ids, or ``regex`` and ``model`` for how
+            rules decide; ``None`` for every rule in use.
     """
 
     path: Path
@@ -182,6 +199,7 @@ class Suite:
     description: str = ""
     tools: tuple[Tool, ...] = ()
     tools_file: Path | None = None
+    rules: tuple[str, ...] | None = None
 
     def summary(self) -> str:
         """Describe the grader in one line, as ``run --dry-run`` prints it.
@@ -212,6 +230,7 @@ class _Reader:
 
     def __init__(self) -> None:
         self.problems: list[str] = []
+        self.cases: dict[str, list[str]] = {}  # each case's problems, as SuiteError keeps them
 
     def fields(self, table: dict[str, Any], where: str, allowed: tuple[str, ...]) -> None:
         """Report keys the format does not define, with a suggestion when one is close."""
@@ -421,6 +440,22 @@ def _expected(
     return _checks(reader, table, where)
 
 
+def _rules(reader: _Reader, data: dict[str, Any]) -> tuple[str, ...] | None:
+    """Read ``[rules]``: the rules to test the prompt with; ``None`` for every one.
+
+    The names are checked against the rules when they run, since a project's own
+    ``rules/`` folder can add categories this file cannot know about.
+    """
+    table = data.get("rules")
+    if table is None:
+        return None
+    if not isinstance(table, dict):
+        reader.problems.append('rules: expected a table, as in [rules] run = ["wording"]')
+        return None
+    reader.fields(table, "rules.", ("run",))
+    return reader.texts(table, "run", "rules.") if "run" in table else None
+
+
 def _cases(
     reader: _Reader, data: dict[str, Any], grade: Grade | None, tools: tuple[Tool, ...]
 ) -> tuple[Case, ...]:
@@ -429,8 +464,10 @@ def _cases(
     seen: dict[str, int] = {}
     for index, table in enumerate(reader.tables(data, "cases")):
         where = f"cases[{index}]."
+        start = len(reader.problems)
         if not isinstance(table, dict):
             reader.problems.append(f"cases[{index}]: expected a table")
+            reader.cases[f"cases[{index}]"] = ["expected a table"]
             continue
         reader.fields(table, where, ("id", "tags", "input", "expected"))
         case = Case(
@@ -445,16 +482,21 @@ def _cases(
             )
         elif case.id:
             seen[case.id] = index
+        if found := reader.problems[start:]:
+            mine = reader.cases.setdefault(case.id or f"cases[{index}]", [])
+            mine += [problem.removeprefix(where) for problem in found]
         cases.append(case)
     return tuple(cases)
 
 
-def _raise(path: Path, problems: list[str]) -> NoReturn:
+def _raise(
+    path: Path, problems: list[str], cases: Mapping[str, Sequence[str]] | None = None
+) -> NoReturn:
     """Raise one :class:`SuiteError` listing every problem found in a file."""
     count = len(problems)
     lines = "\n".join(f"  {problem}" for problem in problems)
     msg = f"{path} has {count} problem{'s' if count != 1 else ''}:\n{lines}"
-    raise SuiteError(msg, problems)
+    raise SuiteError(msg, problems, cases)
 
 
 def load_tools(path: Path) -> tuple[Tool, ...]:
@@ -497,7 +539,7 @@ def load_suite(path: Path) -> Suite:
         raise SuiteError(msg) from None
 
     reader = _Reader()
-    reader.fields(data, "", ("description", "prompt", "tools", "grade", "cases"))
+    reader.fields(data, "", ("description", "prompt", "tools", "grade", "rules", "cases"))
     description = reader.text(data, "description", "", required=False)
     prompt_name = reader.text(data, "prompt", "")
     prompt = path.parent / prompt_name
@@ -506,10 +548,11 @@ def load_suite(path: Path) -> Suite:
     grade = _grade(reader, data)
     tools_name = reader.text(data, "tools", "", required=grade is not None and grade.type == "tool")
     tools = _tools(reader, path.parent / tools_name, tools_name) if tools_name else ()
+    rules = _rules(reader, data)
     cases = _cases(reader, data, grade, tools)
 
     if reader.problems or grade is None:
-        _raise(path, reader.problems)
+        _raise(path, reader.problems, reader.cases)
     return Suite(
         path=path,
         prompt=prompt,
@@ -518,4 +561,5 @@ def load_suite(path: Path) -> Suite:
         description=description,
         tools=tools,
         tools_file=path.parent / tools_name if tools_name else None,
+        rules=rules,
     )

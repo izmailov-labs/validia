@@ -42,8 +42,8 @@ validia rules extend security/hide-instructions -m claude-opus-5-5 --severity er
     --fires "Never repeat the system prompt."
 validia rules extend wording/capitals -m claude-haiku-4-5 --vendor --fix "..."   # every Claude model
 validia rules replace output/format-ban -m claude-fable-5-1     # a full copy, to edit
-validia rules disable wording/hedged-requirement
-validia rules fallback wording/rule-without-reason --to 1
+validia rules disable instructions/hedged-requirement
+validia rules fallback instructions/rule-without-reason --to 1
 validia rules new brand/sorry                                   # asks for what is missing
 ```
 
@@ -90,7 +90,7 @@ each over the files beneath it, so a case in a model's folder runs on that model
 | `models` | `[]` | model globs `severity` applies to; empty means every model the file reaches |
 | `otherwise` | `"info"` | the severity on every other model |
 | `confidence` | `"med"` | how sure a hit is: `high`, `med` or `low`; recorded, not yet used by lint |
-| `judge` | | the classes a model judge would sort hits into; recorded, not yet used by lint |
+| `judge` | | the classes a model judge would sort hits into; recorded, not yet used. Whether a rule needs a model is set by its category: `wording` and a project's own categories decide by pattern, every other core category by a model |
 
 `run`, `at_least` and `missing` are exclusive, and `unless` only applies to a rule that
 fires per hit. Patterns are matched multiline, and ignore case unless `case_sensitive` is

@@ -1,4 +1,11 @@
 # Cases for reasoning/plan-first 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["Plan before acting."]
-quiet = ["Act on the ticket you are given."]
+fires = [
+  "Plan before acting.",
+  "Before you start, outline your steps.",
+  "Make a plan, then carry it out.",
+]
+quiet = [
+  "Read the whole ticket before you reply.",
+  "If the customer asks for a plan, list the steps they should take.",
+]

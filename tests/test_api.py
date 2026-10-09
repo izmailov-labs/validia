@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import validia
+from validia.rules import CATEGORIES
 from validia.suites.api import (
     CaseSpec,
     SpecError,
@@ -55,6 +56,7 @@ def test_create_a_suite_from_a_json_body(tmp_path: Path) -> None:
     assert described["prompt"] == "evals/triage/prompt.md"
     assert described["groups"] == {"urgent": 1, "untagged": 1}
     assert [case["id"] for case in described["cases"]] == ["outage", "typo"]
+    assert described["rules"] == list(CATEGORIES)
     assert (tmp_path / "evals/triage/prompt.md").read_text(encoding="utf-8").endswith(".\n")
 
 

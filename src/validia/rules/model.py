@@ -1,10 +1,11 @@
 """What a rule is, and what checking one produces: rules, findings, packs, releases."""
 
+import difflib
 import fnmatch
 import re
 from collections import Counter
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal, TypeVar
 
 Severity = Literal["info", "warn", "error"]
@@ -25,10 +26,46 @@ SEVERITIES: tuple[Severity, ...] = ("info", "warn", "error")
 """Severities, least to most."""
 
 
-CATEGORIES = ("wording", "context", "reasoning", "output", "tools", "security", "maintenance")
+CATEGORIES = (
+    "wording",
+    "instructions",
+    "context",
+    "reasoning",
+    "output",
+    "tools",
+    "security",
+    "maintenance",
+)
 
 
 """The core categories, in reading order."""
+
+
+Check = Literal["regex", "model"]
+"""How a rule decides: by its pattern alone, or by a model reading what the text means."""
+
+CHECKS: tuple[Check, ...] = ("regex", "model")
+"""Every way a rule can decide, as ``--rules`` and ``[rules] run`` name them."""
+
+PATTERN_CATEGORY = "wording"
+"""The one core category whose rules decide by pattern: what the text literally holds."""
+
+
+def check_for(category: str) -> Check:
+    """Say how a category's rules decide.
+
+    The core's ``wording`` rules look at the literal text -- capitals, a key, a date,
+    a placeholder -- so a pattern decides. Every other core category is about what
+    the text means, which takes a model. A project's own category holds the patterns
+    its authors wrote, so a pattern decides there too.
+
+    Args:
+        category: The category.
+
+    Returns:
+        ``regex`` or ``model``.
+    """
+    return "model" if category in CATEGORIES and category != PATTERN_CATEGORY else "regex"
 
 
 PROJECT_RULES = "rules"
@@ -165,6 +202,15 @@ class Rule:
     fires: tuple[str, ...] = ()
     quiet: tuple[str, ...] = ()
     origin: tuple[str, ...] = ()
+
+    @property
+    def check(self) -> Check:
+        """How the rule decides, which its category sets: see :func:`check_for`.
+
+        A ``model`` rule's pattern only finds candidates; whether the text is what the
+        rule names -- a rule with no reason, a hedge -- takes a model to judge.
+        """
+        return check_for(self.category)
 
     def severity_for(self, model: str | None) -> Severity:
         """Say how much a hit matters on a model.
@@ -436,6 +482,37 @@ class RulePack:
             self.project,
         )
 
+    def select(self, names: Sequence[str]) -> "RulePack":
+        """Keep the rules any name picks: a category, a rule id, or how rules decide.
+
+        Args:
+            names: Categories (``wording``), rule ids (``wording/capitals``), or
+                :data:`CHECKS` (``regex``, ``model``); a rule any of them picks is kept.
+
+        Returns:
+            The narrower pack.
+
+        Raises:
+            RuleError: If a name picks nothing in this pack, naming what there is.
+        """
+        ids = [rule.id for rule in self.rules]
+        known = [*self.categories, *CHECKS, *ids]
+        unknown = [name for name in names if name not in known]
+        if unknown:
+            every = f"a category ({', '.join(self.categories)}), a rule id, or regex or model"
+            problems = []
+            for name in unknown:
+                close = difflib.get_close_matches(name, known, n=1)
+                hint = f"did you mean {close[0]!r}?" if close else f"name {every}"
+                problems.append(f"no category, rule or check {name!r} - {hint}")
+            raise RuleError("the rules chosen", problems)
+        kept = tuple(
+            rule
+            for rule in self.rules
+            if rule.category in names or rule.id in names or rule.check in names
+        )
+        return replace(self.only(tuple({rule.category for rule in kept})), rules=kept)
+
 
 @dataclass(frozen=True, slots=True)
 class RuleCheck:
@@ -446,12 +523,16 @@ class RuleCheck:
         failures: What went wrong; empty when it passed.
         cases: How many cases were run.
         category: The category it belongs to.
+        waiting: Whether it was left unproved, waiting for a model: a ``model``
+            rule's cases, and its category's examples, are about meaning, which no
+            pattern can be held to.
     """
 
     name: str
     failures: tuple[str, ...]
     cases: int
     category: str = ""
+    waiting: bool = False
 
     @property
     def passed(self) -> bool:

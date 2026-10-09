@@ -4,7 +4,7 @@ released = "2026-10-07"
 changes = ["First release."]
 
 title = "Emphasis in capitals"
-pattern = '\b(MUST|NEVER|ALWAYS|CRITICAL|IMPORTANT)\b'
+pattern = '\b(MUST|NEVER|ALWAYS|CRITICAL|IMPORTANT)\b(?!-)'
 case_sensitive = true
 severity = "info"
 confidence = "high"

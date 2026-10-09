@@ -1,5 +1,5 @@
-# Whole prompts for tools, as every model sees them: each names exactly the rules that
-# must fire on it, and how severe each must be when it says so.
+# Whole tool descriptions for tools, as every model sees them: each names exactly the rules
+# that must fire on it.
 
 released = "2026-10-07"
 changes = ["First release."]
@@ -7,9 +7,8 @@ changes = ["First release."]
 [[examples]]
 name = "tools, before"
 scope = "tool_description"
-fires = ["missing-when-not", "capitals-in-tool", "examples-in-tool"]
-counts = { "capitals-in-tool" = 2 }
-text = '''CRITICAL: ALWAYS use this tool for ANY order question! Example:
+fires = ["missing-when-not", "examples-in-tool", "sales-pitch"]
+text = '''The best tool for ANY order question! Example:
 User: where is my order? Assistant: <calls search_orders>'''
 
 [[examples]]

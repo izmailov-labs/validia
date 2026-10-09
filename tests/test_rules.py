@@ -12,6 +12,7 @@ from validia.rules import (
     Rule,
     RuleError,
     RulePack,
+    check_for,
     core_categories,
     core_releases,
     core_rules,
@@ -90,6 +91,27 @@ def test_the_core_is_a_folder_per_rule() -> None:
     changes = dict(release.changes)
     assert changes["First release."][0] == "numbered-script default"
     assert any(where == ("show-reasoning anthropic/default",) for where in changes.values())
+    # wording holds what a pattern decides; instructions holds the rules about meaning.
+    in_use = default_rules(categories=["wording", "instructions"])
+    assert [rule.id for rule in in_use.rules] == [
+        "wording/capitals",
+        "wording/capitals-in-tool",
+        "wording/credential",
+        "wording/exclamation-marks",
+        "wording/expired-date",
+        "wording/length-cap",
+        "wording/old-model-name",
+        "wording/unwrapped-input",
+        "instructions/completion-booster",
+        "instructions/default-when-unsure",
+        "instructions/habit-to-break",
+        "instructions/hedged-requirement",
+        "instructions/prohibition-list",
+        "instructions/rule-without-reason",
+    ]
+    assert core_rules("instructions") == tuple(
+        rule.id.split("/")[1] for rule in in_use.rules if rule.category == "instructions"
+    )
 
 
 def test_a_model_reads_its_vendor_and_its_own_files() -> None:
@@ -191,10 +213,10 @@ def test_lint_reads_only_its_scope_and_sorts_by_position() -> None:
     findings = lint_text("You are a helpful assistant.\nTry to help.", pack)
     assert [(f.rule, f.line) for f in findings] == [
         ("context/identity-stub", 1),
-        ("wording/hedged-requirement", 2),
+        ("instructions/hedged-requirement", 2),
     ]
     tools = lint_text("You MUST call this.", pack, scope="tool_description")
-    assert {f.rule for f in tools} == {"tools/missing-when-not", "tools/capitals-in-tool"}
+    assert {f.rule for f in tools} == {"tools/missing-when-not", "wording/capitals-in-tool"}
 
 
 def test_a_pack_narrows_to_categories() -> None:
@@ -207,7 +229,9 @@ def test_a_pack_narrows_to_categories() -> None:
     assert all(example.category == "wording" for example in wording.examples)
     assert wording.target == pack.target
     assert default_rules(categories=["tools", "security"]).categories == ("tools", "security")
-    with pytest.raises(RuleError, match="no category 'tone'; there are wording, context"):
+    with pytest.raises(
+        RuleError, match="no category 'tone'; there are wording, instructions, context"
+    ):
         default_rules(categories=["tone"])
 
 
@@ -751,29 +775,31 @@ SORRY = {
         ),
         (
             {
-                "wording/hedged-requirement/default/1.0.0.toml": "enabled = false\n",
-                "wording/hedged-requirement/default/1.0.0.cases.toml": "",
+                "instructions/hedged-requirement/default/1.0.0.toml": "enabled = false\n",
+                "instructions/hedged-requirement/default/1.0.0.cases.toml": "",
             },
             "cases: a `enabled` rule has no cases of its own",
         ),
         (
-            {"wording/hedged-requirement/default/1.0.0.toml": "extend = true\nseverity = 'loud'\n"},
-            "rules/wording/hedged-requirement/default/1.0.0.toml: severity: 'loud'",
+            {
+                "instructions/hedged-requirement/default/1.0.0.toml": "extend = true\nseverity = 'loud'\n"
+            },
+            "rules/instructions/hedged-requirement/default/1.0.0.toml: severity: 'loud'",
         ),
         (
-            {"wording/rule-without-reason/default/1.0.0.toml": "from = 'one'\n"},
+            {"instructions/rule-without-reason/default/1.0.0.toml": "from = 'one'\n"},
             'from: expected a release, as in "1" or "1.0.0"',
         ),
         (
-            {"wording/rule-without-reason/default/1.0.0.toml": "from = 'latest'\n"},
+            {"instructions/rule-without-reason/default/1.0.0.toml": "from = 'latest'\n"},
             "from: expected a release",
         ),
         (
-            {"wording/rule-without-reason/default/1.0.0.toml": "from = '7'\n"},
-            "from: wording has no release matching '7'; it has 1.0.0",
+            {"instructions/rule-without-reason/default/1.0.0.toml": "from = '7'\n"},
+            "from: instructions has no release matching '7'; it has 1.0.0",
         ),
         (
-            {"wording/rule-without-reason/default/1.0.0.toml": "from = '1'\npattern = 'x'\n"},
+            {"instructions/rule-without-reason/default/1.0.0.toml": "from = '1'\npattern = 'x'\n"},
             "a `from` rule takes only from, not pattern",
         ),
         (
@@ -825,7 +851,7 @@ def test_a_project_adds_extends_replaces_and_turns_off(tmp_path: Path) -> None:
             "brand/examples/default/1.0.0.toml": '[[examples]]\nname = "sorry"\ntext = "Apologise first."\n'
             'fires = { "sorry" = "warn" }\n',
             "brand/README.md": "notes are fine",
-            "wording/hedged-requirement/default/1.0.0.toml": "enabled = false\n",
+            "instructions/hedged-requirement/default/1.0.0.toml": "enabled = false\n",
             "context/restated-default/default/1.0.0.toml": 'pattern = "be helpful"\nfix = "Say what helpful means."\n',
             "context/restated-default/default/1.0.0.cases.toml": 'fires = ["Be helpful."]\nquiet = ["Be clear."]\n',
             "wording/capitals/default/1.0.0.toml": 'extend = true\nseverity = "error"\n',
@@ -836,7 +862,7 @@ def test_a_project_adds_extends_replaces_and_turns_off(tmp_path: Path) -> None:
     )
     pack = load_rules(folder, target=("anthropic", "claude-opus-5-5"))
     names = ids(pack)
-    assert "wording/hedged-requirement" not in names
+    assert "instructions/hedged-requirement" not in names
     assert pack.categories[-1] == "brand"  # a category the core does not have comes last
     assert names[-1] == "brand/sorry"
     wording = [rule.id for rule in pack.rules if rule.category == "wording"]
@@ -858,7 +884,7 @@ def test_a_project_adds_extends_replaces_and_turns_off(tmp_path: Path) -> None:
     assert [c for c in checks if not c.passed] == []
     examples = {example.name for example in pack.examples}
     assert "sorry" in examples
-    assert "wording, before" not in examples  # it named the disabled wording/hedged-requirement
+    assert "instructions, before" not in examples  # it named the disabled hedged-requirement
     assert "layout, before" not in examples  # and this one the replaced context/restated-default
     narrowed = load_rules(folder, categories=["brand"])
     assert (narrowed.categories, ids(narrowed), narrowed.version) == (
@@ -1054,3 +1080,51 @@ def test_a_rule_says_how_it_matches_and_how_severe_it_is_in_words() -> None:
     assert raised.describe_severity(None) == "error on claude-opus-5*; warn elsewhere"
     assert raised.describe_severity("claude-opus-5-5") == "error"
     assert rule(severity="info").describe_severity(None) == "info"
+
+
+# ------------------------------------------------------- how a rule decides, and choosing rules
+
+
+def test_wording_decides_by_pattern_and_every_other_core_category_by_a_model() -> None:
+    pack = default_rules(None)
+    regex = {rule.id for rule in pack.rules if rule.check == "regex"}
+    assert regex == {rule.id for rule in pack.rules if rule.category == "wording"}
+    assert len(regex) == 8
+    assert len(pack.rules) - len(regex) == 33
+    assert [check_for(category) for category in CATEGORIES] == ["regex"] + ["model"] * 7
+    assert check_for("brand") == "regex"  # a project's own category holds its own patterns
+
+
+def test_a_model_rule_s_cases_wait_for_a_model() -> None:
+    checks = verify_rules(default_rules(None))
+    waiting = {check.name for check in checks if check.waiting}
+    assert "reasoning/plan-first" in waiting
+    assert "instructions, before" in waiting  # an example of a model category, too
+    assert "wording/credential" not in waiting
+    assert all(check.passed for check in checks)
+
+
+def test_select_keeps_every_rule_any_name_picks() -> None:
+    pack = default_rules(None)
+    picked = pack.select(["wording/capitals", "security", "model"])
+    assert [rule.id for rule in picked.rules if rule.category == "security"] == [
+        rule.id for rule in pack.rules if rule.category == "security"
+    ]
+    assert "wording/capitals" in [rule.id for rule in picked.rules]
+    assert "wording/exclamation-marks" not in [rule.id for rule in picked.rules]
+    assert {rule.id for rule in pack.rules if rule.check == "model"} <= {
+        rule.id for rule in picked.rules
+    }
+    assert set(picked.categories) == {rule.category for rule in picked.rules}
+    assert picked.version == pack.version
+    assert pack.select([]).rules == ()
+
+
+def test_select_names_what_it_does_not_know() -> None:
+    with pytest.raises(RuleError) as caught:
+        default_rules(None).select(["wordng", "xyz", "regex"])
+    assert caught.value.problems == [
+        "no category, rule or check 'wordng' - did you mean 'wording'?",
+        "no category, rule or check 'xyz' - name a category (wording, instructions, context,"
+        " reasoning, output, tools, security, maintenance), a rule id, or regex or model",
+    ]

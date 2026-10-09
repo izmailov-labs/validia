@@ -1,13 +1,10 @@
-# How to write wording for anthropic models: what the layers
-# beside it encode as rules, said as instructions.
+# How to write wording for anthropic models: what the layers beside it encode as rules, said as instructions.
 
 released = "2026-10-07"
 changes = ["First release."]
 
-summary = "Current Claude models follow a plain instruction with its reason better than a loud or bare one."
+summary = "Current Claude models overtrigger on loud emphasis."
 instructions = [
-  "Say what to do instead of what not to do; keep a prohibition for a real business rule, with its reason.",
-  "Give the reason with the rule: Claude generalises from the reason to cases the rule never names.",
   "Drop capitals and exclamation marks: Opus 4.5 to 5.5 and Sonnet 4.6 overtrigger on them.",
 ]
 sources = [

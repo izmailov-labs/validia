@@ -1,4 +1,0 @@
-# Cases for output/length-cap 1.0.0: text it must fire on, and text it must stay quiet on.
-
-fires = ["Answer in at most 50 words.", "Send an update every 5 tool calls."]
-quiet = ["Answer in a short paragraph."]

@@ -1,4 +1,10 @@
 # Cases for tools/examples-in-tool 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ['Look up an order. Example: lookup_order("48213").', "Search help, e.g. for billing."]
-quiet = ["Look up one order by its number."]
+fires = [
+  "Look up an order. Example: lookup_order(\"48213\").",
+  "Example: the user asks \"where is my parcel?\"; call it with the order number.",
+]
+quiet = [
+  "Look up one order by its number.",
+  "Search the help centre, for billing and account questions.",
+]

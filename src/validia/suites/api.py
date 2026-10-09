@@ -29,6 +29,7 @@ from ..prompts.building import (
     review_answer,
     review_answers,
 )
+from ..rules.model import CATEGORIES
 from .authoring import append_case, case_toml, suite_toml, write_suite
 from .expect import NO_TOOL, Reply, ToolCall, Verdict
 from .scaffold import folder_problem, name_problem
@@ -473,6 +474,7 @@ def create_suite(spec: SuiteSpec, root: Path) -> Suite:
         run=shown.as_posix(),
         description=spec.description,
         tools=tools_ref,
+        rules=CATEGORIES,
     )
     try:
         return write_suite(folder, {"suite.toml": rendered, **files})
@@ -584,7 +586,8 @@ def describe_suite(suite: Suite, root: Path | None = None) -> dict[str, Any]:
         root: Paths are shown relative to this, when they are inside it.
 
     Returns:
-        The answer type, labels, required keys, tools with their parameters, and
+        The answer type, labels, required keys, tools with their parameters, the
+        rule categories the prompt is tested against (``None`` for every one), and
         every case's id, tags and input.
     """
 
@@ -605,5 +608,6 @@ def describe_suite(suite: Suite, root: Path | None = None) -> dict[str, Any]:
             for tool in suite.tools
         ],
         "groups": suite.groups(),
+        "rules": None if suite.rules is None else list(suite.rules),
         "cases": [{"id": c.id, "tags": list(c.tags), "input": c.input} for c in suite.cases],
     }

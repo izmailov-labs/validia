@@ -3,5 +3,9 @@
 fires = [
   "The best way to answer any question.",
   "This should be called whenever a user writes.",
+  "Our most powerful tool, perfect for any question!",
 ]
-quiet = ["Look up one order by its number."]
+quiet = [
+  "Look up one order by its number.",
+  "Returns the best match for the query, or an empty list.",
+]

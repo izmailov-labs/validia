@@ -80,7 +80,8 @@ class RuleVersions:
     the model's -- so one category can stay behind while the rest move on.
 
     Attributes:
-        wording: How each instruction is phrased.
+        wording: What the text literally holds: capitals, keys, dates, placeholders.
+        instructions: How each instruction is phrased: reasons, hedges, prohibitions.
         context: What the window holds and how it is laid out.
         reasoning: Scripts, coaching and thinking in prose.
         output: The output contract.
@@ -90,6 +91,7 @@ class RuleVersions:
     """
 
     wording: str = "latest"
+    instructions: str = "latest"
     context: str = "latest"
     reasoning: str = "latest"
     output: str = "latest"

@@ -43,8 +43,8 @@ Run one test: `uv run pytest tests/test_smoke.py::test_version_is_exposed`
   API), `prompts/` (the guided builder and `default.toml`), `rules/` (the lint engine split
   into `model`, `matching`, `reading`, `catalog`, `layering`, plus `local` for project rule
   files, and the core rule tree in `core/`), `runs/` (model access and the runner) and `cli/`
-  (`app` assembling one module per command family on `common`, plus `interview`, `settings`
-  and `_loop`). `suites/` and `prompts/` keep their `__init__` free of imports, because
+  (`app` assembling one module per command family on `common`, plus `interview`, `settings`,
+  `output` and `_loop`). `suites/` and `prompts/` keep their `__init__` free of imports, because
   `suites.api` and `prompts.building` import each other's packages; `rules/` re-exports its
   public API.
 - **Tooling configuration lives once, in `pyproject.toml`.** Ruff, mypy, pytest and coverage are
@@ -67,6 +67,9 @@ Run one test: `uv run pytest tests/test_smoke.py::test_version_is_exposed`
   httpx is **not** a dependency of validia. It sits behind `franca[http]`, and the transport is
   injected, so offline paths (scripted transports, cassettes) never need it. `validia run`'s
   default transport is the one thing that needs real HTTP, and it is the `validia[http]` extra.
+  rich is **not** one either: it is the `validia[rich]` extra, for colour and a progress bar
+  in `validia run`, and `cli/output.py` is the one place that imports it, lazily, falling
+  back to the same lines in plain text. The dev group installs it so tests cover both.
 - **Async is asyncio-declared but loop-neutral by construction.** Sleep and time go through an
   injected `Clock` (`franca.core.clock`), HTTP through an injected `Transport`, so no `anyio`:
   a trio user passes their own `TrioClock`. Enforced, not intended — ruff `TID251` bans

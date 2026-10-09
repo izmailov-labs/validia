@@ -1,4 +1,12 @@
 # Cases for reasoning/think-in-prose 1.0.0: text it must fire on, and text it must stay quiet on.
 
-fires = ["Think step by step.", "Don't overthink it."]
-quiet = ["Reply with one word."]
+fires = [
+  "Think step by step.",
+  "Don't overthink it.",
+  "Let's think step-by-step.",
+  "Reason very carefully before you answer.",
+]
+quiet = [
+  "Reply with one word.",
+  "Walk the customer through the setup step by step.",
+]

@@ -6,17 +6,17 @@ changes = ["First release."]
 
 [[examples]]
 name = "wording, before"
-fires = ["prohibition-list", "exclamation-marks", "capitals", "rule-without-reason", "hedged-requirement", "completion-booster"]
+fires = ["capitals", "exclamation-marks", "credential", "expired-date", "old-model-name", "length-cap", "unwrapped-input"]
 counts = { "capitals" = 3 }
 text = '''IMPORTANT: You MUST ALWAYS be polite!!
-Never mention competitors. Never use slang. Never start a reply with "Certainly".
-Try to include a summary if possible.
-Be thorough. Do not stop early.'''
+Use sk-test-000000000000000000000000 for the orders API.
+As of 2025-03, damaged items count as late. Unlike Claude 3.5 Sonnet, answer in at most 50 words.
+Customer message: {message}'''
 
 [[examples]]
 name = "wording, after"
 fires = []
-text = '''Customers read these replies on their phones between other tasks, so write in plain,
-friendly language. Don't name or compare competitors: legal reviews every comparison we
-publish, and support replies are not reviewed. End with a short summary of what was
-resolved and what happens next.'''
+text = '''Customers read these replies on their phones, so write in plain, friendly language.
+The orders tool holds its own credentials. Damaged items count as late.
+Keep each reply to a short paragraph.
+<message>{message}</message>'''
