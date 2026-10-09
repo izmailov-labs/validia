@@ -1146,7 +1146,7 @@ validia<span class="w"> </span>create<span class="w">                    </span>
 validia<span class="w"> </span>add<span class="w"> </span>evals/ticket-triage/suite.toml<span class="w">       </span><span class="c1"># add a test case, one question at a time</span>
 validia<span class="w"> </span>check<span class="w"> </span>evals/ticket-triage/suite.toml<span class="w"> </span>outage-login<span class="w"> </span>--reply<span class="w"> </span><span class="s2">"Urgent."</span>
 validia<span class="w"> </span>config<span class="w">                    </span><span class="c1"># every setting, and where its value came from</span>
-validia<span class="w"> </span>run<span class="w"> </span>evals/ticket-triage/suite.toml<span class="w"> </span>-m<span class="w"> </span>claude-sonnet-5-5<span class="w"> </span>--dry-run
+validia<span class="w"> </span>run<span class="w"> </span>evals/ticket-triage/suite.toml<span class="w"> </span>--dry-run<span class="w">    </span><span class="c1"># check the suite; no model needed</span>
 validia<span class="w"> </span>run<span class="w"> </span>evals/ticket-triage/suite.toml<span class="w"> </span>-m<span class="w"> </span>claude-sonnet-5-5<span class="w"> </span>-n<span class="w"> </span><span class="m">3</span><span class="w">   </span><span class="c1"># call the model</span>
 </code></pre></div>
 <p><code>init</code> asks three questions -- the folder for suites, the answer type, and the
@@ -1306,7 +1306,7 @@ and <code>--args</code> for a tool call, and otherwise from the terminal or stan
 description -- against the rules for a model, without calling it:</p>
 <div class="highlight"><pre><span></span><code>$ validia lint evals/billing/prompt.md -m claude-sonnet-5-5
 evals/billing/prompt.md:2:1  info   wording/capitals  'NEVER'  State the one real constraint plainly, ...
-evals/billing/prompt.md:2:1  warn   wording/rule-without-reason  'NEVER'  Give the reason (because ..., so that ...): ...
+evals/billing/prompt.md:2:1  warn   instructions/rule-without-reason  'NEVER'  Give the reason (because ..., so that ...): ...
 evals/billing/prompt.md:3:1  error  reasoning/show-reasoning  'Show your reasoning'  Remove it: these models refuse ...
 rules 1.0.0 for anthropic:claude-sonnet-5-5: 3 findings (1 error, 1 warn, 1 info)
 </code></pre></div>
@@ -1345,16 +1345,28 @@ suite can use another model, more reps or a different provider.
 <p><code>validia run</code> sends every case to the model, <code>--reps</code> times each, and grades every reply
 with the suite's own check -- the same one <code>validia check</code> uses:</p>
 <div class="highlight"><pre><span></span><code>$ validia run evals/ticket-triage/suite.toml -m claude-sonnet-5-5 -n 3
+  PASS   outage-login            3/3
+  FAIL   data-loss-invoices      0/3  expected 'urgent', got 'normal'
+  FAIL   security-unknown-login  0/3  expected 'urgent', got 'normal'
+  PASS   calm-checkout-outage    3/3
+  PASS   how-to-export           3/3
+  PASS   billing-next-invoice    3/3
+  PASS   pricing-typo            3/3
+  PASS   angry-feature-request   3/3
+
 ticket-triage on anthropic:claude-sonnet-5-5: 18 of 24 passed, 75.0% (95% interval 55.1%-88.0%)
   served by claude-sonnet-5-5-20261001
   by group: urgent 6/12, normal 12/12
-  failing:
-    data-loss-invoices      0 of 3  expected 'urgent', got 'normal'
-    security-unknown-login  0 of 3  expected 'urgent', got 'normal'
   tokens: 2,880 in, 48 out
   latency: p50 820 ms, p95 1,900 ms
   written to .validia/runs/20261007T143012Z-ticket-triage/
 </code></pre></div>
+<p>Each case gets a line, as a test runner prints one, once its last repetition comes back:
+<code>PASS</code>; <code>FAIL</code> with the first reason it failed; or <code>ERROR</code> when a call never came back to
+be graded. With <code>--reps</code> above 1 it also says how many repetitions passed. Lines print in
+the order cases finish. With the <code>rich</code> extra (<code>pip install 'validia[rich]'</code>) the
+statuses are coloured and a progress bar shows while trials run; piped, or in CI, the
+output is the same plain text either way.</p>
 <p>The suite's prompt is the system text and each case's input the user turn. Repetitions
 make the pass rate an estimate, so it comes with a 95% interval: with eight cases and one
 rep, 75% means "somewhere between 41% and 93%". A call that fails -- a rate limit that
@@ -1365,12 +1377,62 @@ sent. <code>--fail-under 90</code> (<code>run.fail_under</code>) also fails it w
 below 90%, for CI. Every trial -- reply, tokens, latency, attempts, served model -- is
 written to <code>trials.jsonl</code>, and the totals to <code>summary.json</code>, in a folder of the run's own
 under <code>run.output</code>.</p>
-<p>Calling a model needs an HTTP client: <code>pip install 'validia[http]'</code>. The key comes from the
-environment or the project's <code>.env</code>, as <code>validia config --keys</code> shows. <code>--dry-run</code> calls
-nothing: it validates the suite, reporting every problem in it at once, checks model
-access, and prints what would run. Suites with tools are refused for now: franca, the
-layer validia calls models through, sends text turns only in its current release, so the
-tools would never reach the model.</p>
+<p>Calling a model needs an HTTP client: <code>pip install 'validia[http]'</code>, or
+<code>pip install 'validia[http,rich]'</code> for the coloured output as well. The key comes from the
+environment or the project's <code>.env</code>, as <code>validia config --keys</code> shows. Suites with tools
+are refused for now: franca, the layer validia calls models through, sends text turns
+only in its current release, so the tools would never reach the model.</p>
+<p><code>--dry-run</code> calls nothing, and needs no model. It tests the prompt with the
+<a href="../rules/">prompt rules</a> -- one test per rule, by category, each tagged with how it
+decides -- then lists every case and what a right reply to it is, so a suite can be
+checked before a model is chosen:</p>
+<div class="highlight"><pre><span></span><code>$ validia run evals/ticket-triage/suite.toml --dry-run
+evals/ticket-triage/suite.toml: 8 cases, graded as label  (urgent, normal)
+
+wording
+  INFO   capitals              regex  prompt.md:1:1  'NEVER'  State the one real constraint plainly, ...
+  SKIP   capitals-in-tool      regex  no tools in this suite
+  PASS   exclamation-marks     regex  Repeated exclamation marks
+  WARN   length-cap            regex  prompt.md:2:11  'at most 50 words'  Describe the reader and ...
+  ...
+instructions
+  SKIP   rule-without-reason   model  needs a model: pass --model
+  ...
+
+cases
+  ready  outage-login            is 'urgent'
+  ...
+  ready  angry-feature-request   is 'normal'
+
+rules 1.0.0: 5 passed, 1 warning, 1 info, 34 skipped
+8 cases ready; nothing sent. To run them, pass --model, or set `model` in validia.toml.
+</code></pre></div>
+<p>The category decides how its rules decide. <code>wording</code> holds what the text literally
+contains -- capitals, a key, a date, a placeholder, a model name, a number of words -- so
+a pattern decides, and its rules run without a model: one passes when it finds nothing,
+fails at <code>lint.fail_on</code> (<code>error</code> by default) -- failing the dry run -- and is a <code>WARN</code> or
+<code>INFO</code> below it. Every other category -- <code>instructions</code>, <code>context</code>, <code>reasoning</code>,
+<code>output</code>, <code>tools</code>, <code>security</code>, <code>maintenance</code> -- is about what the text means, which takes a
+model: without one its rules are skipped, and with <code>-m</code> their hits are <code>CHECK</code>, candidates
+for a model to confirm, which never fail the run. The judge that confirms them is not
+built yet. A rule that reads only tool descriptions is skipped in a suite without tools,
+and with <code>-m</code> every rule is at that model's severity.</p>
+<p>Choose exactly what runs with <code>--rules</code>, repeated for more: a category (<code>wording</code>), a
+rule id (<code>wording/capitals</code>), or <code>regex</code> or <code>model</code>. A suite's <code>[rules] run</code> takes the same
+names and is the default; <code>create</code> and <code>init</code> write every core category, an empty list
+tests no rules, and a suite without the table is tested with every rule in use, your own
+in <code>rules/</code> included:</p>
+<div class="highlight"><pre><span></span><code>validia run evals/ticket-triage/suite.toml --dry-run --rules regex
+validia run evals/ticket-triage/suite.toml --dry-run --rules wording/capitals --rules security
+</code></pre></div>
+<p>Rules themselves change the usual way -- <code>validia rules extend</code>, <code>replace</code>, <code>disable</code> and
+<code>fallback</code>, and a release pin -- as <a href="../rules/">Prompt rules</a> describes. <code>validia lint</code>
+takes <code>--rules</code> too, and reads a suite's <code>[rules] run</code>.</p>
+<p>A broken suite gets an <code>ERROR</code> line per problem instead, under the case it is in -- or
+under <code>suite</code> for the prompt, the grader or the tools -- all at once, and a real run
+refuses it the same way. With a model, the last line says how many trials a run would
+send and where the key comes from. <code>validia config --suite SUITE</code> shows the settings
+behind it and where each one came from.</p>
 <p>Settings resolve through <a href="https://github.com/izmailov-labs/whence">whence</a>. Highest
 precedence first:</p>
 <table>

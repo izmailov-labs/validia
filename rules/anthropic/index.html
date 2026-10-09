@@ -827,6 +827,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        instructions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reasoning" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -880,10 +891,8 @@
 <p>Released 2026-10-07; a pin reads it as <code>wording = "1.0.0"</code> under <code>[lint.rules]</code>.</p>
 <details class="tip">
 <summary>Writing for anthropic/default</summary>
-<p>Current Claude models follow a plain instruction with its reason better than a loud or bare one.</p>
+<p>Current Claude models overtrigger on loud emphasis.</p>
 <ul>
-<li>Say what to do instead of what not to do; keep a prohibition for a real business rule, with its reason.</li>
-<li>Give the reason with the rule: Claude generalises from the reason to cases the rule never names.</li>
 <li>Drop capitals and exclamation marks: Opus 4.5 to 5.5 and Sonnet 4.6 overtrigger on them.</li>
 </ul>
 <p>Sources: Anthropic, Prompting best practices; Anthropic, Prompting Claude Fable 5, Sonnet 5, Opus 4.8 and Opus 5; Anthropic skills repository, prompt-audit guide.</p>
@@ -906,14 +915,45 @@
 <td>warn on <code>claude-opus-4-5</code>, <code>claude-opus-4-6</code>, <code>claude-sonnet-4-6</code>, <code>claude-opus-5</code>, <code>claude-opus-5-5</code>; info on the rest</td>
 </tr>
 <tr>
-<td><code>wording/default-when-unsure</code></td>
-<td>Makes a tool the default when in doubt</td>
+<td><code>wording/exclamation-marks</code></td>
+<td>Repeated exclamation marks</td>
 <td>info</td>
 <td>warn on <code>claude-opus-4-5</code>, <code>claude-opus-4-6</code>, <code>claude-sonnet-4-6</code>, <code>claude-opus-5</code>, <code>claude-opus-5-5</code>; info on the rest</td>
 </tr>
+</tbody>
+</table>
+</div>
+<h2 id="instructions">instructions<a class="headerlink" href="#instructions" title="Permanent link">&para;</a></h2>
+<div class="rules-release">
+<label for="rules-release-instructions">Release</label>
+<select id="rules-release-instructions" class="rules-release__select" data-category="instructions"><option value="1.0.0" selected>1.0.0 (latest)</option></select>
+</div>
+
+<div class="rules-release__view" data-category="instructions" data-release="1.0.0">
+<p>Released 2026-10-07; a pin reads it as <code>instructions = "1.0.0"</code> under <code>[lint.rules]</code>.</p>
+<details class="tip">
+<summary>Writing for anthropic/default</summary>
+<p>Current Claude models follow a plain instruction with its reason better than a bare one.</p>
+<ul>
+<li>Say what to do instead of what not to do; keep a prohibition for a real business rule, with its reason.</li>
+<li>Give the reason with the rule: Claude generalises from the reason to cases the rule never names.</li>
+</ul>
+<p>Sources: Anthropic, Prompting best practices; Anthropic, Prompting Claude Fable 5, Sonnet 5, Opus 4.8 and Opus 5; Anthropic skills repository, prompt-audit guide.</p>
+<p>From <a href="./"><code>anthropic/default</code></a>, 1.0.0.</p>
+</details>
+<table>
+<thead>
 <tr>
-<td><code>wording/exclamation-marks</code></td>
-<td>Repeated exclamation marks</td>
+<th>Rule</th>
+<th>Finds</th>
+<th>Default</th>
+<th>On <code>anthropic:</code> models</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>instructions/default-when-unsure</code></td>
+<td>Makes a tool the default when in doubt</td>
 <td>info</td>
 <td>warn on <code>claude-opus-4-5</code>, <code>claude-opus-4-6</code>, <code>claude-sonnet-4-6</code>, <code>claude-opus-5</code>, <code>claude-opus-5-5</code>; info on the rest</td>
 </tr>

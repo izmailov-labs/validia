@@ -472,6 +472,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        instructions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -949,6 +960,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        instructions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1063,18 +1085,18 @@
 <td><a href="../anthropic/"><code>anthropic/default</code></a>: warn on 5 models; info on the rest<br><a href="../google/"><code>google/default</code></a>: warn on <code>gemini-3*</code>; info on the rest<br><a href="../openai/"><code>openai/default</code></a>: warn on <code>gpt-4.1*</code>, <code>gpt-5</code>; info on the rest</td>
 </tr>
 <tr>
-<td><code>wording/completion-booster</code></td>
-<td>A completion booster</td>
-<td>prompt</td>
+<td><code>wording/capitals-in-tool</code></td>
+<td>Steering in capitals in a tool description</td>
+<td>tool descriptions</td>
 <td>warn</td>
 <td>—</td>
 </tr>
 <tr>
-<td><code>wording/default-when-unsure</code></td>
-<td>Makes a tool the default when in doubt</td>
+<td><code>wording/credential</code></td>
+<td>A credential in the prompt</td>
 <td>prompt</td>
-<td>info</td>
-<td><a href="../anthropic/"><code>anthropic/default</code></a>: warn on 5 models; info on the rest</td>
+<td>error</td>
+<td>—</td>
 </tr>
 <tr>
 <td><code>wording/exclamation-marks</code></td>
@@ -1084,28 +1106,92 @@
 <td><a href="../anthropic/"><code>anthropic/default</code></a>: warn on 5 models; info on the rest<br><a href="../google/"><code>google/default</code></a>: warn on <code>gemini-3*</code>; info on the rest<br><a href="../openai/"><code>openai/default</code></a>: warn on <code>gpt-4.1*</code>, <code>gpt-5</code>; info on the rest</td>
 </tr>
 <tr>
-<td><code>wording/habit-to-break</code></td>
+<td><code>wording/expired-date</code></td>
+<td>A date-limited instruction</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>wording/length-cap</code></td>
+<td>A hard length cap in the prompt</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>wording/old-model-name</code></td>
+<td>Names an old model</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>wording/unwrapped-input</code></td>
+<td>Untrusted input without delimiters</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="instructions">instructions<a class="headerlink" href="#instructions" title="Permanent link">&para;</a></h2>
+<div class="rules-release">
+<label for="rules-release-instructions">Release</label>
+<select id="rules-release-instructions" class="rules-release__select" data-category="instructions"><option value="1.0.0" selected>1.0.0 (latest)</option></select>
+</div>
+
+<div class="rules-release__view" data-category="instructions" data-release="1.0.0">
+<p>Released 2026-10-07; a pin reads it as <code>instructions = "1.0.0"</code> under <code>[lint.rules]</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Finds</th>
+<th>Reads</th>
+<th>Severity</th>
+<th>Changed by provider or model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>instructions/completion-booster</code></td>
+<td>A completion booster</td>
+<td>prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>instructions/default-when-unsure</code></td>
+<td>Makes a tool the default when in doubt</td>
+<td>prompt</td>
+<td>info</td>
+<td><a href="../anthropic/"><code>anthropic/default</code></a>: warn on 5 models; info on the rest</td>
+</tr>
+<tr>
+<td><code>instructions/habit-to-break</code></td>
 <td>Names a habit to break</td>
 <td>prompt</td>
 <td>warn</td>
 <td>—</td>
 </tr>
 <tr>
-<td><code>wording/hedged-requirement</code></td>
+<td><code>instructions/hedged-requirement</code></td>
 <td>A hedged requirement</td>
 <td>prompt</td>
 <td>warn</td>
 <td>—</td>
 </tr>
 <tr>
-<td><code>wording/prohibition-list</code></td>
+<td><code>instructions/prohibition-list</code></td>
 <td>Three or more prohibitions in a row</td>
 <td>prompt</td>
 <td>warn</td>
 <td><a href="../anthropic/claude-opus-5-5/"><code>anthropic/claude-opus-5-5</code></a>: info, own fix</td>
 </tr>
 <tr>
-<td><code>wording/rule-without-reason</code></td>
+<td><code>instructions/rule-without-reason</code></td>
 <td>A rule without its reason</td>
 <td>prompt</td>
 <td>warn</td>
@@ -1303,13 +1389,6 @@
 <td>warn</td>
 <td>—</td>
 </tr>
-<tr>
-<td><code>output/length-cap</code></td>
-<td>A hard length cap in the prompt</td>
-<td>prompt</td>
-<td>warn</td>
-<td>—</td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -1332,13 +1411,6 @@
 </tr>
 </thead>
 <tbody>
-<tr>
-<td><code>tools/capitals-in-tool</code></td>
-<td>Steering in capitals in a tool description</td>
-<td>tool descriptions</td>
-<td>warn</td>
-<td>—</td>
-</tr>
 <tr>
 <td><code>tools/discourages-tools</code></td>
 <td>Discourages tool use across the board</td>
@@ -1397,13 +1469,6 @@
 </thead>
 <tbody>
 <tr>
-<td><code>security/credential</code></td>
-<td>A credential in the prompt</td>
-<td>prompt</td>
-<td>error</td>
-<td>—</td>
-</tr>
-<tr>
 <td><code>security/hide-instructions</code></td>
 <td>Asks the model to keep its instructions secret</td>
 <td>prompt</td>
@@ -1413,13 +1478,6 @@
 <tr>
 <td><code>security/obey-input</code></td>
 <td>Tells the model to obey the input</td>
-<td>prompt</td>
-<td>warn</td>
-<td>—</td>
-</tr>
-<tr>
-<td><code>security/unwrapped-input</code></td>
-<td>Untrusted input without delimiters</td>
 <td>prompt</td>
 <td>warn</td>
 <td>—</td>
@@ -1454,22 +1512,8 @@
 <td>—</td>
 </tr>
 <tr>
-<td><code>maintenance/expired-date</code></td>
-<td>A date-limited instruction</td>
-<td>prompt</td>
-<td>warn</td>
-<td>—</td>
-</tr>
-<tr>
 <td><code>maintenance/grading-talk</code></td>
 <td>Talks about grading</td>
-<td>prompt</td>
-<td>warn</td>
-<td>—</td>
-</tr>
-<tr>
-<td><code>maintenance/old-model-name</code></td>
-<td>Names an old model</td>
 <td>prompt</td>
 <td>warn</td>
 <td>—</td>

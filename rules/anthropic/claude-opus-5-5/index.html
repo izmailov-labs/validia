@@ -630,6 +630,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        instructions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -951,6 +962,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        instructions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1048,10 +1070,8 @@
 <p>Released 2026-10-07; a pin reads it as <code>wording = "1.0.0"</code> under <code>[lint.rules]</code>.</p>
 <details class="tip">
 <summary>Writing for anthropic/default</summary>
-<p>Current Claude models follow a plain instruction with its reason better than a loud or bare one.</p>
+<p>Current Claude models overtrigger on loud emphasis.</p>
 <ul>
-<li>Say what to do instead of what not to do; keep a prohibition for a real business rule, with its reason.</li>
-<li>Give the reason with the rule: Claude generalises from the reason to cases the rule never names.</li>
 <li>Drop capitals and exclamation marks: Opus 4.5 to 5.5 and Sonnet 4.6 overtrigger on them.</li>
 </ul>
 <p>Sources: Anthropic, Prompting best practices; Anthropic, Prompting Claude Fable 5, Sonnet 5, Opus 4.8 and Opus 5; Anthropic skills repository, prompt-audit guide.</p>
@@ -1059,9 +1079,8 @@
 </details>
 <details class="tip">
 <summary>Writing for anthropic/claude-opus-5-5</summary>
-<p>Opus 5.5 follows a named avoid-list, and overtriggers on capitals like the Opus models before it.</p>
+<p>Opus 5.5 overtriggers on capitals like the Opus models before it.</p>
 <ul>
-<li>A short, named avoid-list works on this model; give each item its reason.</li>
 <li>Keep emphasis out: capitals and '!!' still make it overtrigger.</li>
 </ul>
 <p>Sources: Anthropic, Prompting best practices; Anthropic, Prompting Claude Opus 5.5; Anthropic skills repository, prompt-audit guide.</p>
@@ -1084,16 +1103,16 @@
 <td><a href="../"><code>anthropic/default</code></a></td>
 </tr>
 <tr>
-<td><code>wording/completion-booster</code></td>
-<td>A completion booster</td>
+<td><code>wording/capitals-in-tool</code></td>
+<td>Steering in capitals in a tool description</td>
 <td>warn</td>
 <td>—</td>
 </tr>
 <tr>
-<td><code>wording/default-when-unsure</code></td>
-<td>Makes a tool the default when in doubt</td>
-<td><strong>warn</strong> (default info)</td>
-<td><a href="../"><code>anthropic/default</code></a></td>
+<td><code>wording/credential</code></td>
+<td>A credential in the prompt</td>
+<td>error</td>
+<td>—</td>
 </tr>
 <tr>
 <td><code>wording/exclamation-marks</code></td>
@@ -1102,25 +1121,101 @@
 <td><a href="../"><code>anthropic/default</code></a></td>
 </tr>
 <tr>
-<td><code>wording/habit-to-break</code></td>
+<td><code>wording/expired-date</code></td>
+<td>A date-limited instruction</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>wording/length-cap</code></td>
+<td>A hard length cap in the prompt</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>wording/old-model-name</code></td>
+<td>Names an old model</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>wording/unwrapped-input</code></td>
+<td>Untrusted input without delimiters</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="instructions">instructions<a class="headerlink" href="#instructions" title="Permanent link">&para;</a></h2>
+<div class="rules-release">
+<label for="rules-release-instructions">Release</label>
+<select id="rules-release-instructions" class="rules-release__select" data-category="instructions"><option value="1.0.0" selected>1.0.0 (latest)</option></select>
+</div>
+
+<div class="rules-release__view" data-category="instructions" data-release="1.0.0">
+<p>Released 2026-10-07; a pin reads it as <code>instructions = "1.0.0"</code> under <code>[lint.rules]</code>.</p>
+<details class="tip">
+<summary>Writing for anthropic/default</summary>
+<p>Current Claude models follow a plain instruction with its reason better than a bare one.</p>
+<ul>
+<li>Say what to do instead of what not to do; keep a prohibition for a real business rule, with its reason.</li>
+<li>Give the reason with the rule: Claude generalises from the reason to cases the rule never names.</li>
+</ul>
+<p>Sources: Anthropic, Prompting best practices; Anthropic, Prompting Claude Fable 5, Sonnet 5, Opus 4.8 and Opus 5; Anthropic skills repository, prompt-audit guide.</p>
+<p>From <a href="../"><code>anthropic/default</code></a>, 1.0.0.</p>
+</details>
+<details class="tip">
+<summary>Writing for anthropic/claude-opus-5-5</summary>
+<p>Opus 5.5 follows a named avoid-list.</p>
+<ul>
+<li>A short, named avoid-list works on this model; give each item its reason.</li>
+</ul>
+<p>Sources: Anthropic, Prompting best practices; Anthropic, Prompting Claude Opus 5.5; Anthropic skills repository, prompt-audit guide.</p>
+<p>From <a href="./"><code>anthropic/claude-opus-5-5</code></a>, 1.0.0.</p>
+</details>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Finds</th>
+<th>On this model</th>
+<th>From</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>instructions/completion-booster</code></td>
+<td>A completion booster</td>
+<td>warn</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>instructions/default-when-unsure</code></td>
+<td>Makes a tool the default when in doubt</td>
+<td><strong>warn</strong> (default info)</td>
+<td><a href="../"><code>anthropic/default</code></a></td>
+</tr>
+<tr>
+<td><code>instructions/habit-to-break</code></td>
 <td>Names a habit to break</td>
 <td>warn</td>
 <td>—</td>
 </tr>
 <tr>
-<td><code>wording/hedged-requirement</code></td>
+<td><code>instructions/hedged-requirement</code></td>
 <td>A hedged requirement</td>
 <td>warn</td>
 <td>—</td>
 </tr>
 <tr>
-<td><code>wording/prohibition-list</code></td>
+<td><code>instructions/prohibition-list</code></td>
 <td>Three or more prohibitions in a row</td>
 <td><strong>info</strong> (default warn)</td>
 <td><a href="./"><code>anthropic/claude-opus-5-5</code></a></td>
 </tr>
 <tr>
-<td><code>wording/rule-without-reason</code></td>
+<td><code>instructions/rule-without-reason</code></td>
 <td>A rule without its reason</td>
 <td>warn</td>
 <td>—</td>
@@ -1316,12 +1411,6 @@
 <td>warn</td>
 <td>—</td>
 </tr>
-<tr>
-<td><code>output/length-cap</code></td>
-<td>A hard length cap in the prompt</td>
-<td>warn</td>
-<td>—</td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -1343,12 +1432,6 @@
 </tr>
 </thead>
 <tbody>
-<tr>
-<td><code>tools/capitals-in-tool</code></td>
-<td>Steering in capitals in a tool description</td>
-<td>warn</td>
-<td>—</td>
-</tr>
 <tr>
 <td><code>tools/discourages-tools</code></td>
 <td>Discourages tool use across the board</td>
@@ -1401,12 +1484,6 @@
 </thead>
 <tbody>
 <tr>
-<td><code>security/credential</code></td>
-<td>A credential in the prompt</td>
-<td>error</td>
-<td>—</td>
-</tr>
-<tr>
 <td><code>security/hide-instructions</code></td>
 <td>Asks the model to keep its instructions secret</td>
 <td>info</td>
@@ -1415,12 +1492,6 @@
 <tr>
 <td><code>security/obey-input</code></td>
 <td>Tells the model to obey the input</td>
-<td>warn</td>
-<td>—</td>
-</tr>
-<tr>
-<td><code>security/unwrapped-input</code></td>
-<td>Untrusted input without delimiters</td>
 <td>warn</td>
 <td>—</td>
 </tr>
@@ -1452,20 +1523,8 @@
 <td>—</td>
 </tr>
 <tr>
-<td><code>maintenance/expired-date</code></td>
-<td>A date-limited instruction</td>
-<td>warn</td>
-<td>—</td>
-</tr>
-<tr>
 <td><code>maintenance/grading-talk</code></td>
 <td>Talks about grading</td>
-<td>warn</td>
-<td>—</td>
-</tr>
-<tr>
-<td><code>maintenance/old-model-name</code></td>
-<td>Names an old model</td>
 <td>warn</td>
 <td>—</td>
 </tr>

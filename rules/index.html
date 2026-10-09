@@ -937,7 +937,7 @@ site is built, so they always match the rules <code>validia lint</code> reads.</
 <h2 id="linting-a-prompt">Linting a prompt<a class="headerlink" href="#linting-a-prompt" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>$ validia lint evals/billing/prompt.md -m claude-sonnet-5-5
 evals/billing/prompt.md:2:1  info   wording/capitals  'NEVER'  State the one real constraint plainly, ...
-evals/billing/prompt.md:2:1  warn   wording/rule-without-reason  'NEVER'  Give the reason (because ..., so that ...): ...
+evals/billing/prompt.md:2:1  warn   instructions/rule-without-reason  'NEVER'  Give the reason (because ..., so that ...): ...
 evals/billing/prompt.md:3:1  error  reasoning/show-reasoning  'Show your reasoning'  Remove it: these models refuse ...
 wording/anthropic/default 1.0.0: Current Claude models follow a plain instruction with its reason ...
   - Give the reason with the rule: Claude generalises from the reason to cases the rule never names.
@@ -969,6 +969,11 @@ out), a pointer to the most severe finding's rule, and the summary.</p>
 <td>the lowest severity that makes the command exit 1; <code>error</code> by default</td>
 </tr>
 <tr>
+<td><code>--rules NAME</code></td>
+<td>a suite's <code>[rules] run</code></td>
+<td>only these rules: a category, a rule id (<code>wording/capitals</code>), or <code>regex</code> or <code>model</code> for how rules decide; repeat for more</td>
+</tr>
+<tr>
 <td><code>--category NAME</code></td>
 <td></td>
 <td>only this category's rules; repeat for more</td>
@@ -983,6 +988,16 @@ out), a pointer to the most severe finding's rule, and the summary.</p>
 <p>There are three severities. <code>error</code> is for text that must not ship: a credential, or a
 request the model refuses. <code>warn</code> is for text that usually makes the prompt worse, and
 <code>info</code> for a habit worth knowing about.</p>
+<p>Every rule also says how it decides, and its category sets it. <code>wording</code> rules are
+<code>regex</code>: they look at what the text literally holds -- capitals, a leaked key, a date, a
+placeholder with no tags, an old model's name, a number of words -- and a pattern decides.
+Rules in every other category are <code>model</code>: a rule given without its reason, a hedge, an
+identity stub, a request to plan are about meaning, so a pattern only finds candidates,
+for a model to judge. A project's own category is <code>regex</code>. <code>validia rules list</code> shows
+which is which. In <code>validia run --dry-run</code>, <code>model</code> rules are skipped without a model, and
+with one their hits are <code>CHECK</code>: candidates, not findings, until the judge that confirms
+them is built. Their cases say what the text means, so <code>validia rules test</code> proves them
+only once that judge exists; until then they wait.</p>
 <h2 id="choosing-the-model">Choosing the model<a class="headerlink" href="#choosing-the-model" title="Permanent link">&para;</a></h2>
 <p>The model comes from <code>-m</code>, or from the <code>model</code> setting, so a suite folder's own
 <code>validia.toml</code> can lint its prompt for the model it runs on. It is written
@@ -1141,8 +1156,8 @@ no folder of its own reads its provider's, and a provider with none reads the de
 <tr>
 <td><a href="anthropic/"><code>anthropic/default</code></a></td>
 <td>every <code>anthropic:</code> model</td>
-<td><code>wording/capitals</code>, <code>wording/default-when-unsure</code>, <code>wording/exclamation-marks</code>, <code>reasoning/show-reasoning</code>, <code>output/hold-progress</code></td>
-<td>wording, reasoning, output</td>
+<td><code>wording/capitals</code>, <code>wording/exclamation-marks</code>, <code>instructions/default-when-unsure</code>, <code>reasoning/show-reasoning</code>, <code>output/hold-progress</code></td>
+<td>wording, instructions, reasoning, output</td>
 </tr>
 <tr>
 <td><a href="anthropic/claude-fable-5-1/"><code>anthropic/claude-fable-5-1</code></a></td>
@@ -1159,8 +1174,8 @@ no folder of its own reads its provider's, and a provider with none reads the de
 <tr>
 <td><a href="anthropic/claude-opus-5-5/"><code>anthropic/claude-opus-5-5</code></a></td>
 <td><code>anthropic:claude-opus-5-5</code></td>
-<td><code>wording/prohibition-list</code></td>
-<td>wording</td>
+<td><code>instructions/prohibition-list</code></td>
+<td>wording, instructions</td>
 </tr>
 <tr>
 <td><a href="anthropic/claude-sonnet-5-5/"><code>anthropic/claude-sonnet-5-5</code></a></td>
@@ -1178,7 +1193,7 @@ no folder of its own reads its provider's, and a provider with none reads the de
 <td><a href="openai/"><code>openai/default</code></a></td>
 <td>every <code>openai:</code> model</td>
 <td><code>wording/capitals</code>, <code>wording/exclamation-marks</code>, <code>tools/examples-in-tool</code></td>
-<td>wording, tools</td>
+<td>wording, instructions, tools</td>
 </tr>
 </tbody>
 </table>

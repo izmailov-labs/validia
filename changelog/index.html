@@ -971,12 +971,28 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
   <code>validia.toml</code> and an example suite, asking which folder and name to use
   (<code>--evals</code> and <code>--name</code> answer without asking). An existing <code>validia.toml</code> is
   kept, so running <code>init</code> again adds another suite. <code>config</code> shows every resolved
-  setting and the flag, variable or file it came from. <code>run --dry-run</code> validates
-  the suite and prints what it would run.</li>
+  setting and the flag, variable or file it came from. <code>run --dry-run</code> tests the
+  suite's prompt with the prompt rules -- one <code>PASS</code>, <code>FAIL</code>, <code>WARN</code>, <code>INFO</code>, <code>CHECK</code> or
+  <code>SKIP</code> per rule, grouped by category -- and lists every case and what a right reply
+  to it is, or every problem in a broken suite under the case it is in. It needs no
+  model, so a suite can be checked before one is chosen; with one, each rule is at that
+  model's severity and the last line says what a run would send and where the key
+  comes from. A rule that fails at <code>lint.fail_on</code> fails the dry run.</li>
+<li>Every rule says how it decides, and its category sets it. <code>wording</code> is <code>regex</code>: what
+  the text literally holds, which a pattern decides. Every other core category is
+  <code>model</code>: what the text means, where a pattern only finds candidates. <code>run --dry-run</code>
+  skips <code>model</code> rules without a model and shows their hits as <code>CHECK</code> with one; the
+  judge that confirms them is not built yet, and <code>rules test</code> leaves their cases waiting
+  for it. <code>rules list</code> and <code>rules explain</code> show the tag.</li>
+<li><code>--rules</code> on <code>run</code> and <code>lint</code> chooses exactly which rules run: a category, a rule id,
+  or <code>regex</code> or <code>model</code>. A suite's <code>[rules] run</code> takes the same names as its default;
+  <code>create</code> and <code>init</code> write every core category, and a suite without the table is
+  tested with every rule. <code>describe_suite</code> reports it.</li>
 <li><code>validia run</code> evaluates a suite: every case, <code>--reps</code> times, sent through franca
   (Anthropic, OpenAI, Google, xAI, DeepSeek) and graded by the suite's own check.
-  It reports the pass rate with a 95% Wilson interval, results by group, the failing
-  cases with why, tokens and latency, and writes every trial to <code>trials.jsonl</code> and
+  Like a test runner, it prints a line per case as its last repetition lands --
+  <code>PASS</code>, <code>FAIL</code> with why, or <code>ERROR</code> for a call that never came back -- then the
+  pass rate with a 95% Wilson interval, results by group, tokens and latency, and writes every trial to <code>trials.jsonl</code> and
   the totals to <code>summary.json</code> under <code>run.output</code>. Retryable failures are retried
   after the provider's <code>Retry-After</code> or a backoff (<code>run.retries</code>); a call that still
   fails is an error, not a wrong answer, and fails the run, as does a pass rate under
@@ -984,6 +1000,9 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
   <code>selection</code> -- stops the run at the first one instead of sending the rest. Real HTTP is the <code>validia[http]</code> extra. Tool suites are refused
   until franca carries tools. The runner is public API (<code>build_model</code>, <code>run_trial</code>,
   <code>summarize</code>) and loop-neutral; the command line drives it on asyncio.</li>
+<li>The <code>validia[rich]</code> extra colours <code>validia run</code>'s statuses and shows a progress
+  bar while trials run. It is optional: without it, and whenever output is not a
+  terminal, the lines are the same in plain text.</li>
 <li>Suite files: one TOML file per suite with the prompt under test in its own file,
   and <code>[[cases]]</code> with ids, ordered tags and an <code>expected</code> answer whose shape
   follows the suite's answer type: <code>label</code>, <code>json</code> (fields, plus <code>required</code> keys),
@@ -997,9 +1016,13 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
   written until the last answer, and only if the suite loads. Every choice in
   <code>init</code>, <code>create</code> and <code>add</code> is a numbered menu that also takes the option's name.</li>
 <li><code>validia lint</code> checks prompt files, or suites' prompts and tool descriptions,
-  against the rules for a model: 41 regex rules in seven categories (<code>wording</code>,
-  <code>context</code>, <code>reasoning</code>, <code>output</code>, <code>tools</code>, <code>security</code>, <code>maintenance</code>), with
-  <code>--category</code> and <code>--fail-on</code>. Every rule has its own cases: text it must fire on
+  against the rules for a model: 41 rules in eight categories -- <code>wording</code>, whose 8
+  rules decide by pattern (capitals, <code>!!</code>, a credential, an unwrapped placeholder, a
+  date-limited instruction, an old model's name, a hard length cap, capitals in a tool
+  description), and <code>instructions</code>, <code>context</code>, <code>reasoning</code>, <code>output</code>, <code>tools</code>,
+  <code>security</code> and <code>maintenance</code>, whose 33 are about meaning -- with <code>--category</code> and
+  <code>--fail-on</code>. The cases of the meaning rules say what a judge must get right:
+  rewordings it must catch, and near-misses it must leave. Every rule has its own cases: text it must fire on
   and text it must stay quiet on. Whole before-and-after prompts list the exact
   rules each must fire, and how severe each must be on its model.
   <code>validia rules test</code> proves them, <code>validia rules list</code> shows them.</li>
